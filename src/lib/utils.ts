@@ -7,24 +7,37 @@ export function formatDate(dateStr: string): string {
   return date.toLocaleDateString('pt-BR');
 }
 
-export function generateWhatsAppLink(phone: string, clientName: string, property: string, dueDate: string): string {
+export function generateBillingWhatsAppLink(phone: string, clientName: string, vehicle: string, plate: string, dueDate: string): string {
   const formattedDate = formatDate(dueDate);
-  const message = `Olá, ${clientName}! Tudo bem? Aqui é o Andryel. Passando para lembrar que a parcela do seu contrato referente ao imóvel ${property} venceu em ${formattedDate}. Para sua comodidade, você pode realizar o pagamento via PIX ou boleto. Caso já tenha realizado o pagamento, por favor, desconsidere esta mensagem e nos envie o comprovante. Obrigado!`;
+  const message = `Olá, ${clientName}! Tudo bem? Aqui é o Andryel. Passando para lembrar que a mensalidade do seguro do seu veículo ${vehicle} (placa ${plate}) venceu em ${formattedDate}. Para sua comodidade, você pode realizar o pagamento via PIX ou boleto. Caso já tenha realizado o pagamento, por favor, desconsidere esta mensagem e nos envie o comprovante. Obrigado!`;
   return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
 }
 
-export function getPropertyTypeLabel(type: string): string {
+export function generateProspectWhatsAppLink(phone: string, prospectName: string, vehicle: string): string {
+  const message = `Olá, ${prospectName}! Tudo bem? Aqui é o Andryel, especialista em seguros veiculares. Vi que você tem interesse em proteção para o seu ${vehicle}. Tenho planos com ótimo custo-benefício, com cobertura contra roubo, furto, colisão e assistência 24h. Posso te apresentar as opções? Será rápido!`;
+  return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
+}
+
+export function getVehicleTypeLabel(type: string): string {
   const labels: Record<string, string> = {
-    apartment: 'Apartamento',
-    house: 'Casa',
-    commercial: 'Comercial',
-    land: 'Terreno',
+    car: 'Carro',
+    motorcycle: 'Moto',
+    truck: 'Caminhão',
+    van: 'Van/Utilitário',
+    fleet: 'Frota',
   };
   return labels[type] || type;
 }
 
-export function getTransactionLabel(transaction: string): string {
-  return transaction === 'sale' ? 'Venda' : 'Aluguel';
+export function getVehicleTypeEmoji(type: string): string {
+  const emojis: Record<string, string> = {
+    car: '🚗',
+    motorcycle: '🏍️',
+    truck: '🚛',
+    van: '🚐',
+    fleet: '🚚',
+  };
+  return emojis[type] || '🚗';
 }
 
 export function isOverdue(dueDate: string): boolean {

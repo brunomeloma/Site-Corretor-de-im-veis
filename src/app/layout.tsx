@@ -8,8 +8,8 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Andryel | Corretor de Imóveis",
-  description: "Encontre o imóvel dos seus sonhos com o Andryel. Compra, venda e aluguel de imóveis com segurança e transparência.",
+  title: "Andryel | Gestão de Seguros Veiculares",
+  description: "Sistema interno de gestão de clientes, cobranças e prospecção de seguros veiculares.",
 };
 
 export default function RootLayout({
@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${geistSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-slate-50">{children}</body>
     </html>
   );
 }

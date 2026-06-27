@@ -1,32 +1,29 @@
-export interface Property {
-  id: string;
-  title: string;
-  type: 'apartment' | 'house' | 'commercial' | 'land';
-  transaction: 'sale' | 'rent';
-  price: number;
-  location: string;
-  neighborhood: string;
-  city: string;
-  area: number;
-  bedrooms: number;
-  bathrooms: number;
-  parkingSpots: number;
-  description: string;
-  features: string[];
-  images: string[];
-  featured: boolean;
-}
+export type VehicleType = 'car' | 'motorcycle' | 'truck' | 'van' | 'fleet';
 
 export interface Client {
   id: string;
   name: string;
   phone: string;
   email: string;
-  property: string;
-  contractValue: number;
+  vehicle: string;
+  vehicleType: VehicleType;
+  plate: string;
+  plan: string;
+  monthlyValue: number;
   dueDate: string;
   status: 'paid' | 'unpaid';
   notes: string;
 }
 
+export interface Prospect {
+  id: string;
+  name: string;
+  phone: string;
+  vehicle: string;
+  interest: string;
+  notes: string;
+  contacted: boolean;
+}
+
 export type FilterStatus = 'all' | 'paid' | 'unpaid';
+export type ActiveTab = 'dashboard' | 'clients' | 'prospects';

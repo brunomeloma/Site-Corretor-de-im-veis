@@ -1,129 +1,238 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Header from '@/components/public/Header';
-import Hero from '@/components/public/Hero';
-import SearchBar from '@/components/public/SearchBar';
-import PropertyCard from '@/components/public/PropertyCard';
-import Footer from '@/components/public/Footer';
-import { Property } from '@/lib/types';
-import { getProperties } from '@/lib/storage';
-import { Building2, Shield, Handshake, Clock } from 'lucide-react';
+import { Shield, LayoutDashboard, Users, UserSearch } from 'lucide-react';
+import Dashboard from '@/components/admin/Dashboard';
+import ClientTable from '@/components/admin/ClientTable';
+import AddClientForm from '@/components/admin/AddClientForm';
+import ProspectList from '@/components/admin/ProspectList';
+import { Client, Prospect, FilterStatus, ActiveTab, VehicleType } from '@/lib/types';
+import { getClients, saveClients, getProspects, saveProspects, generateId } from '@/lib/storage';
 
 export default function HomePage() {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [transaction, setTransaction] = useState('');
-  const [propertyType, setPropertyType] = useState('');
-  const [city, setCity] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
+  const [clients, setClients] = useState<Client[]>([]);
+  const [prospects, setProspects] = useState<Prospect[]>([]);
+  const [filter, setFilter] = useState<FilterStatus>('all');
+  const [tab, setTab] = useState<ActiveTab>('dashboard');
 
   useEffect(() => {
-    setProperties(getProperties());
+    setClients(getClients());
+    setProspects(getProspects());
   }, []);
 
-  const featured = properties.filter((p) => p.featured);
+  function updateClients(updated: Client[]) {
+    setClients(updated);
+    saveClients(updated);
+  }
 
-  const filtered = properties.filter((p) => {
-    if (transaction && p.transaction !== transaction) return false;
-    if (propertyType && p.type !== propertyType) return false;
-    if (city && !p.city.toLowerCase().includes(city.toLowerCase())) return false;
-    if (maxPrice && p.price > parseFloat(maxPrice)) return false;
-    return true;
-  });
+  function updateProspects(updated: Prospect[]) {
+    setProspects(updated);
+    saveProspects(updated);
+  }
 
-  const hasActiveFilters = transaction || propertyType || city || maxPrice;
-  const displayProperties = hasActiveFilters ? filtered : featured;
+  function toggleStatus(id: string) {
+    const updated = clients.map((c) =>
+      c.id === id ? { ...c, status: c.status === 'paid' ? 'unpaid' as const : 'paid' as const } : c
+    );
+    updateClients(updated);
+  }
+
+  function deleteClient(id: string) {
+    updateClients(clients.filter((c) => c.id !== id));
+  }
+
+  function addClient(data: {
+    name: string;
+    phone: string;
+    email: string;
+    vehicle: string;
+    vehicleType: VehicleType;
+    plate: string;
+    plan: string;
+    monthlyValue: number;
+    dueDate: string;
+    notes: string;
+  }) {
+    const newClient: Client = {
+      id: generateId(),
+      ...data,
+      status: 'unpaid',
+    };
+    updateClients([newClient, ...clients]);
+  }
+
+  function addProspect(data: { name: string; phone: string; vehicle: string; interest: string; notes: string }) {
+    const newProspect: Prospect = {
+      id: generateId(),
+      ...data,
+      contacted: false,
+    };
+    updateProspects([newProspect, ...prospects]);
+  }
+
+  function toggleProspectContacted(id: string) {
+    const updated = prospects.map((p) =>
+      p.id === id ? { ...p, contacted: !p.contacted } : p
+    );
+    updateProspects(updated);
+  }
+
+  function deleteProspect(id: string) {
+    updateProspects(prospects.filter((p) => p.id !== id));
+  }
+
+  const unpaidCount = clients.filter((c) => c.status === 'unpaid').length;
+  const pendingProspects = prospects.filter((p) => !p.contacted).length;
+
+  const tabs: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number }[] = [
+    { id: 'dashboard', label: 'Painel', icon: <LayoutDashboard className="h-4 w-4" /> },
+    { id: 'clients', label: 'Clientes', icon: <Users className="h-4 w-4" />, badge: unpaidCount || undefined },
+    { id: 'prospects', label: 'Prospectar', icon: <UserSearch className="h-4 w-4" />, badge: pendingProspects || undefined },
+  ];
 
   return (
-    <>
-      <Header />
-      <main className="flex-1">
-        <Hero />
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            <div className="flex items-center gap-2.5">
+              <Shield className="h-7 w-7 text-emerald-500" />
+              <div>
+                <span className="text-lg font-bold text-white">Andryel</span>
+                <span className="text-xs text-slate-400 block -mt-0.5 hidden sm:block">Seguros Veiculares</span>
+              </div>
+            </div>
 
-        {/* Search Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
-          <SearchBar
-            transaction={transaction}
-            propertyType={propertyType}
-            city={city}
-            maxPrice={maxPrice}
-            onTransactionChange={setTransaction}
-            onPropertyTypeChange={setPropertyType}
-            onCityChange={setCity}
-            onMaxPriceChange={setMaxPrice}
-          />
-        </section>
-
-        {/* Properties Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-slate-800 mb-2">
-              {hasActiveFilters ? 'Resultados da Busca' : 'Imóveis em Destaque'}
-            </h2>
-            <p className="text-slate-500">
-              {hasActiveFilters
-                ? `${filtered.length} imóvel(is) encontrado(s)`
-                : 'Confira as melhores oportunidades selecionadas por mim'}
-            </p>
-          </div>
-
-          {displayProperties.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayProperties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
+            {/* Desktop tabs */}
+            <nav className="hidden sm:flex items-center gap-1">
+              {tabs.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    tab === t.id
+                      ? 'bg-white/10 text-white'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                  }`}
+                >
+                  {t.icon}
+                  {t.label}
+                  {t.badge && (
+                    <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                      {t.badge}
+                    </span>
+                  )}
+                </button>
               ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 text-slate-400">
-              <Building2 className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>Nenhum imóvel encontrado com os filtros selecionados.</p>
-            </div>
-          )}
-        </section>
-
-        {/* Value Props */}
-        <section className="bg-slate-50 py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-slate-800 mb-2">Por que escolher o Andryel?</h2>
-              <p className="text-slate-500">Atendimento personalizado do início ao fim</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-100">
-                <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Shield className="h-7 w-7 text-emerald-600" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-800 mb-2">Segurança Jurídica</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  Toda documentação revisada e processo acompanhado do início ao fim para sua tranquilidade.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-100">
-                <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Handshake className="h-7 w-7 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-800 mb-2">Negociação Estratégica</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  Experiência em negociação para garantir as melhores condições de compra, venda ou aluguel.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-slate-100">
-                <div className="w-14 h-14 bg-violet-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Clock className="h-7 w-7 text-violet-600" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-800 mb-2">Agilidade no Atendimento</h3>
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  Resposta rápida e disponibilidade para visitas. Seu tempo é valioso e eu respeito isso.
-                </p>
-              </div>
-            </div>
+            </nav>
           </div>
-        </section>
+        </div>
+      </header>
+
+      {/* Mobile bottom tabs */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 safe-area-pb">
+        <div className="grid grid-cols-3">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors relative ${
+                tab === t.id ? 'text-emerald-600' : 'text-slate-400'
+              }`}
+            >
+              {t.icon}
+              {t.label}
+              {t.badge && (
+                <span className="absolute top-2 right-1/4 bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 rounded-full min-w-[16px] text-center">
+                  {t.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {/* Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 pb-24 sm:pb-6 space-y-5">
+
+        {/* ===== DASHBOARD TAB ===== */}
+        {tab === 'dashboard' && (
+          <>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Bom dia, Andryel</h1>
+              <p className="text-sm text-slate-500">Resumo do mês atual</p>
+            </div>
+
+            <Dashboard clients={clients} />
+
+            {unpaidCount > 0 && (
+              <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-red-800 text-sm">
+                    {unpaidCount} cliente{unpaidCount > 1 ? 's' : ''} com pagamento pendente
+                  </p>
+                  <p className="text-xs text-red-600">Clique abaixo para visualizar e enviar cobranças via WhatsApp</p>
+                </div>
+                <button
+                  onClick={() => { setTab('clients'); setFilter('unpaid'); }}
+                  className="inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm shadow-sm"
+                >
+                  Ver Inadimplentes
+                </button>
+              </div>
+            )}
+
+            {pendingProspects > 0 && (
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-blue-800 text-sm">
+                    {pendingProspects} prospecto{pendingProspects > 1 ? 's' : ''} aguardando contato
+                  </p>
+                  <p className="text-xs text-blue-600">Envie uma oferta de seguro via WhatsApp</p>
+                </div>
+                <button
+                  onClick={() => setTab('prospects')}
+                  className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm shadow-sm"
+                >
+                  Ver Prospectos
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ===== CLIENTS TAB ===== */}
+        {tab === 'clients' && (
+          <>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Clientes</h1>
+                <p className="text-sm text-slate-500">Gerencie seguros e cobranças</p>
+              </div>
+              <AddClientForm onAdd={addClient} />
+            </div>
+
+            <ClientTable
+              clients={clients}
+              filter={filter}
+              onFilterChange={setFilter}
+              onToggleStatus={toggleStatus}
+              onDelete={deleteClient}
+            />
+          </>
+        )}
+
+        {/* ===== PROSPECTS TAB ===== */}
+        {tab === 'prospects' && (
+          <ProspectList
+            prospects={prospects}
+            onAdd={addProspect}
+            onToggleContacted={toggleProspectContacted}
+            onDelete={deleteProspect}
+          />
+        )}
       </main>
-      <Footer />
-    </>
+    </div>
   );
 }

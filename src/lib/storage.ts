@@ -1,26 +1,11 @@
-import { Property, Client } from './types';
-import { sampleProperties, sampleClients } from './data';
+import { Client, Prospect } from './types';
+import { sampleClients, sampleProspects } from './data';
 
-const PROPERTIES_KEY = 'andryel_properties';
 const CLIENTS_KEY = 'andryel_clients';
+const PROSPECTS_KEY = 'andryel_prospects';
 
 function isBrowser() {
   return typeof window !== 'undefined';
-}
-
-export function getProperties(): Property[] {
-  if (!isBrowser()) return sampleProperties;
-  const stored = localStorage.getItem(PROPERTIES_KEY);
-  if (!stored) {
-    localStorage.setItem(PROPERTIES_KEY, JSON.stringify(sampleProperties));
-    return sampleProperties;
-  }
-  return JSON.parse(stored);
-}
-
-export function saveProperties(properties: Property[]) {
-  if (!isBrowser()) return;
-  localStorage.setItem(PROPERTIES_KEY, JSON.stringify(properties));
 }
 
 export function getClients(): Client[] {
@@ -36,6 +21,21 @@ export function getClients(): Client[] {
 export function saveClients(clients: Client[]) {
   if (!isBrowser()) return;
   localStorage.setItem(CLIENTS_KEY, JSON.stringify(clients));
+}
+
+export function getProspects(): Prospect[] {
+  if (!isBrowser()) return sampleProspects;
+  const stored = localStorage.getItem(PROSPECTS_KEY);
+  if (!stored) {
+    localStorage.setItem(PROSPECTS_KEY, JSON.stringify(sampleProspects));
+    return sampleProspects;
+  }
+  return JSON.parse(stored);
+}
+
+export function saveProspects(prospects: Prospect[]) {
+  if (!isBrowser()) return;
+  localStorage.setItem(PROSPECTS_KEY, JSON.stringify(prospects));
 }
 
 export function generateId(): string {

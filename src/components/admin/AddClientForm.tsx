@@ -2,14 +2,18 @@
 
 import { useState } from 'react';
 import { UserPlus, X } from 'lucide-react';
+import { VehicleType } from '@/lib/types';
 
 interface AddClientFormProps {
   onAdd: (client: {
     name: string;
     phone: string;
     email: string;
-    property: string;
-    contractValue: number;
+    vehicle: string;
+    vehicleType: VehicleType;
+    plate: string;
+    plan: string;
+    monthlyValue: number;
     dueDate: string;
     notes: string;
   }) => void;
@@ -21,8 +25,11 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
     name: '',
     phone: '',
     email: '',
-    property: '',
-    contractValue: '',
+    vehicle: '',
+    vehicleType: 'car' as VehicleType,
+    plate: '',
+    plan: '',
+    monthlyValue: '',
     dueDate: '',
     notes: '',
   });
@@ -31,9 +38,9 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
     e.preventDefault();
     onAdd({
       ...form,
-      contractValue: parseFloat(form.contractValue) || 0,
+      monthlyValue: parseFloat(form.monthlyValue) || 0,
     });
-    setForm({ name: '', phone: '', email: '', property: '', contractValue: '', dueDate: '', notes: '' });
+    setForm({ name: '', phone: '', email: '', vehicle: '', vehicleType: 'car', plate: '', plan: '', monthlyValue: '', dueDate: '', notes: '' });
     setOpen(false);
   }
 
@@ -41,7 +48,7 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm"
+        className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm"
       >
         <UserPlus className="h-4 w-4" />
         Novo Cliente
@@ -59,7 +66,7 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Nome *</label>
             <input
@@ -72,7 +79,7 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Telefone (com DDD) *</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Telefone *</label>
             <input
               required
               type="text"
@@ -82,9 +89,6 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
               placeholder="5511999999999"
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">E-mail</label>
             <input
@@ -95,34 +99,73 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
               placeholder="email@exemplo.com"
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Imóvel/Contrato *</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Veículo *</label>
             <input
               required
               type="text"
-              value={form.property}
-              onChange={(e) => setForm({ ...form, property: e.target.value })}
+              value={form.vehicle}
+              onChange={(e) => setForm({ ...form, vehicle: e.target.value })}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="Ex: Apt. 302 - Ed. Monte Verde"
+              placeholder="Ex: Toyota Corolla 2024"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Tipo *</label>
+            <select
+              value={form.vehicleType}
+              onChange={(e) => setForm({ ...form, vehicleType: e.target.value as VehicleType })}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="car">Carro</option>
+              <option value="motorcycle">Moto</option>
+              <option value="truck">Caminhão</option>
+              <option value="van">Van/Utilitário</option>
+              <option value="fleet">Frota</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Placa *</label>
+            <input
+              required
+              type="text"
+              value={form.plate}
+              onChange={(e) => setForm({ ...form, plate: e.target.value.toUpperCase() })}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="ABC-1D23"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Valor do Contrato *</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Plano *</label>
+            <input
+              required
+              type="text"
+              value={form.plan}
+              onChange={(e) => setForm({ ...form, plan: e.target.value })}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Ex: Proteção Completa"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Valor Mensal *</label>
             <input
               required
               type="number"
               step="0.01"
-              value={form.contractValue}
-              onChange={(e) => setForm({ ...form, contractValue: e.target.value })}
+              value={form.monthlyValue}
+              onChange={(e) => setForm({ ...form, monthlyValue: e.target.value })}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="2500.00"
+              placeholder="159.90"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Data de Vencimento *</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Vencimento *</label>
             <input
               required
               type="date"
@@ -146,7 +189,7 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
 
         <button
           type="submit"
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors shadow-sm"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors shadow-sm"
         >
           <UserPlus className="h-4 w-4" />
           Cadastrar Cliente
