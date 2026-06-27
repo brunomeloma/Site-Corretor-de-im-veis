@@ -32,10 +32,11 @@ export default function HomePage() {
   }
 
   function changeStatus(id: string, status: ClientStatus) {
-    const updated = clients.map((c) =>
-      c.id === id ? { ...c, status } : c
-    );
-    updateClients(updated);
+    updateClients(clients.map((c) => c.id === id ? { ...c, status } : c));
+  }
+
+  function editClient(updated: Client) {
+    updateClients(clients.map((c) => c.id === updated.id ? updated : c));
   }
 
   function deleteClient(id: string) {
@@ -71,11 +72,12 @@ export default function HomePage() {
     updateProspects([newProspect, ...prospects]);
   }
 
+  function editProspect(updated: Prospect) {
+    updateProspects(prospects.map((p) => p.id === updated.id ? updated : p));
+  }
+
   function toggleProspectContacted(id: string) {
-    const updated = prospects.map((p) =>
-      p.id === id ? { ...p, contacted: !p.contacted } : p
-    );
-    updateProspects(updated);
+    updateProspects(prospects.map((p) => p.id === id ? { ...p, contacted: !p.contacted } : p));
   }
 
   function deleteProspect(id: string) {
@@ -86,9 +88,9 @@ export default function HomePage() {
   const pendingProspects = prospects.filter((p) => !p.contacted).length;
 
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number }[] = [
-    { id: 'dashboard', label: 'Painel', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { id: 'clients', label: 'Clientes', icon: <Users className="h-4 w-4" />, badge: billingCount || undefined },
-    { id: 'prospects', label: 'Prospectar', icon: <UserSearch className="h-4 w-4" />, badge: pendingProspects || undefined },
+    { id: 'dashboard', label: 'Painel', icon: <LayoutDashboard className="h-5 w-5 sm:h-4 sm:w-4" /> },
+    { id: 'clients', label: 'Clientes', icon: <Users className="h-5 w-5 sm:h-4 sm:w-4" />, badge: billingCount || undefined },
+    { id: 'prospects', label: 'Prospectar', icon: <UserSearch className="h-5 w-5 sm:h-4 sm:w-4" />, badge: pendingProspects || undefined },
   ];
 
   return (
@@ -132,7 +134,7 @@ export default function HomePage() {
       </header>
 
       {/* Mobile bottom tabs */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 safe-area-pb">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="grid grid-cols-3">
           {tabs.map((t) => (
             <button
@@ -145,7 +147,7 @@ export default function HomePage() {
               {t.icon}
               {t.label}
               {t.badge && (
-                <span className="absolute top-2 right-1/4 bg-red-500 text-white text-[10px] font-bold px-1 py-0.5 rounded-full min-w-[16px] text-center">
+                <span className="absolute top-1.5 right-1/4 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
                   {t.badge}
                 </span>
               )}
@@ -155,14 +157,14 @@ export default function HomePage() {
       </nav>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 pb-24 sm:pb-6 space-y-5">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 sm:pb-6 space-y-4 sm:space-y-5">
 
         {/* ===== DASHBOARD TAB ===== */}
         {tab === 'dashboard' && (
           <>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Bom dia, Andryel</h1>
-              <p className="text-sm text-slate-500">Resumo do mês atual</p>
+              <p className="text-sm text-slate-500">Resumo do mes atual</p>
             </div>
 
             <Dashboard clients={clients} />
@@ -171,13 +173,13 @@ export default function HomePage() {
               <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <p className="font-semibold text-red-800 text-sm">
-                    {billingCount} parcela{billingCount > 1 ? 's' : ''} pendente{billingCount > 1 ? 's' : ''} de cobrança
+                    {billingCount} parcela{billingCount > 1 ? 's' : ''} pendente{billingCount > 1 ? 's' : ''} de cobranca
                   </p>
-                  <p className="text-xs text-red-600">Clique abaixo para visualizar e enviar cobranças via WhatsApp</p>
+                  <p className="text-xs text-red-600">Clique abaixo para visualizar e enviar cobrancas via WhatsApp</p>
                 </div>
                 <button
                   onClick={() => { setTab('clients'); setFilter('enviado'); }}
-                  className="inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm shadow-sm"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm shadow-sm"
                 >
                   Ver Pendentes
                 </button>
@@ -194,7 +196,7 @@ export default function HomePage() {
                 </div>
                 <button
                   onClick={() => setTab('prospects')}
-                  className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm shadow-sm"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm shadow-sm"
                 >
                   Ver Prospectos
                 </button>
@@ -206,10 +208,10 @@ export default function HomePage() {
         {/* ===== CLIENTS TAB ===== */}
         {tab === 'clients' && (
           <>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Relatório de Parcelas</h1>
-                <p className="text-sm text-slate-500">Gerencie seguros, cobranças e cancelamentos</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Relatorio de Parcelas</h1>
+                <p className="text-sm text-slate-500">Gerencie seguros, cobrancas e cancelamentos</p>
               </div>
               <AddClientForm onAdd={addClient} />
             </div>
@@ -219,6 +221,7 @@ export default function HomePage() {
               filter={filter}
               onFilterChange={setFilter}
               onChangeStatus={changeStatus}
+              onEdit={editClient}
               onDelete={deleteClient}
             />
           </>
@@ -229,6 +232,7 @@ export default function HomePage() {
           <ProspectList
             prospects={prospects}
             onAdd={addProspect}
+            onEdit={editProspect}
             onToggleContacted={toggleProspectContacted}
             onDelete={deleteProspect}
           />
