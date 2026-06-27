@@ -1,17 +1,18 @@
 export type VehicleType = 'car' | 'motorcycle' | 'truck' | 'van' | 'fleet';
+export type ClientStatus = 'pago' | 'enviado' | 'cancelando' | 'processo_cancel' | 'pendente';
 
 export interface Client {
   id: string;
   name: string;
   phone: string;
   email: string;
-  vehicle: string;
-  vehicleType: VehicleType;
-  plate: string;
-  plan: string;
-  monthlyValue: number;
+  insurer: string;
+  installments: number;
   dueDate: string;
-  status: 'paid' | 'unpaid';
+  cancelDate: string;
+  producer: string;
+  status: ClientStatus;
+  policy: string;
   notes: string;
 }
 
@@ -25,5 +26,5 @@ export interface Prospect {
   contacted: boolean;
 }
 
-export type FilterStatus = 'all' | 'paid' | 'unpaid';
+export type FilterStatus = 'all' | 'pago' | 'enviado' | 'cancelando' | 'pendente';
 export type ActiveTab = 'dashboard' | 'clients' | 'prospects';

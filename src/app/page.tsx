@@ -6,8 +6,9 @@ import Dashboard from '@/components/admin/Dashboard';
 import ClientTable from '@/components/admin/ClientTable';
 import AddClientForm from '@/components/admin/AddClientForm';
 import ProspectList from '@/components/admin/ProspectList';
-import { Client, Prospect, FilterStatus, ActiveTab, VehicleType } from '@/lib/types';
+import { Client, Prospect, FilterStatus, ActiveTab, ClientStatus } from '@/lib/types';
 import { getClients, saveClients, getProspects, saveProspects, generateId } from '@/lib/storage';
+import { needsBilling } from '@/lib/utils';
 
 export default function HomePage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -30,9 +31,9 @@ export default function HomePage() {
     saveProspects(updated);
   }
 
-  function toggleStatus(id: string) {
+  function changeStatus(id: string, status: ClientStatus) {
     const updated = clients.map((c) =>
-      c.id === id ? { ...c, status: c.status === 'paid' ? 'unpaid' as const : 'paid' as const } : c
+      c.id === id ? { ...c, status } : c
     );
     updateClients(updated);
   }
@@ -45,18 +46,18 @@ export default function HomePage() {
     name: string;
     phone: string;
     email: string;
-    vehicle: string;
-    vehicleType: VehicleType;
-    plate: string;
-    plan: string;
-    monthlyValue: number;
+    insurer: string;
+    installments: number;
     dueDate: string;
+    cancelDate: string;
+    producer: string;
+    policy: string;
     notes: string;
   }) {
     const newClient: Client = {
       id: generateId(),
       ...data,
-      status: 'unpaid',
+      status: 'pendente',
     };
     updateClients([newClient, ...clients]);
   }
@@ -81,12 +82,12 @@ export default function HomePage() {
     updateProspects(prospects.filter((p) => p.id !== id));
   }
 
-  const unpaidCount = clients.filter((c) => c.status === 'unpaid').length;
+  const billingCount = clients.filter((c) => needsBilling(c.status)).length;
   const pendingProspects = prospects.filter((p) => !p.contacted).length;
 
   const tabs: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: 'dashboard', label: 'Painel', icon: <LayoutDashboard className="h-4 w-4" /> },
-    { id: 'clients', label: 'Clientes', icon: <Users className="h-4 w-4" />, badge: unpaidCount || undefined },
+    { id: 'clients', label: 'Clientes', icon: <Users className="h-4 w-4" />, badge: billingCount || undefined },
     { id: 'prospects', label: 'Prospectar', icon: <UserSearch className="h-4 w-4" />, badge: pendingProspects || undefined },
   ];
 
@@ -166,19 +167,19 @@ export default function HomePage() {
 
             <Dashboard clients={clients} />
 
-            {unpaidCount > 0 && (
+            {billingCount > 0 && (
               <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <p className="font-semibold text-red-800 text-sm">
-                    {unpaidCount} cliente{unpaidCount > 1 ? 's' : ''} com pagamento pendente
+                    {billingCount} parcela{billingCount > 1 ? 's' : ''} pendente{billingCount > 1 ? 's' : ''} de cobrança
                   </p>
                   <p className="text-xs text-red-600">Clique abaixo para visualizar e enviar cobranças via WhatsApp</p>
                 </div>
                 <button
-                  onClick={() => { setTab('clients'); setFilter('unpaid'); }}
+                  onClick={() => { setTab('clients'); setFilter('enviado'); }}
                   className="inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors text-sm shadow-sm"
                 >
-                  Ver Inadimplentes
+                  Ver Pendentes
                 </button>
               </div>
             )}
@@ -207,8 +208,8 @@ export default function HomePage() {
           <>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Clientes</h1>
-                <p className="text-sm text-slate-500">Gerencie seguros e cobranças</p>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Relatório de Parcelas</h1>
+                <p className="text-sm text-slate-500">Gerencie seguros, cobranças e cancelamentos</p>
               </div>
               <AddClientForm onAdd={addClient} />
             </div>
@@ -217,7 +218,7 @@ export default function HomePage() {
               clients={clients}
               filter={filter}
               onFilterChange={setFilter}
-              onToggleStatus={toggleStatus}
+              onChangeStatus={changeStatus}
               onDelete={deleteClient}
             />
           </>

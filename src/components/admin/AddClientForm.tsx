@@ -2,19 +2,18 @@
 
 import { useState } from 'react';
 import { UserPlus, X } from 'lucide-react';
-import { VehicleType } from '@/lib/types';
 
 interface AddClientFormProps {
   onAdd: (client: {
     name: string;
     phone: string;
     email: string;
-    vehicle: string;
-    vehicleType: VehicleType;
-    plate: string;
-    plan: string;
-    monthlyValue: number;
+    insurer: string;
+    installments: number;
     dueDate: string;
+    cancelDate: string;
+    producer: string;
+    policy: string;
     notes: string;
   }) => void;
 }
@@ -25,12 +24,12 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
     name: '',
     phone: '',
     email: '',
-    vehicle: '',
-    vehicleType: 'car' as VehicleType,
-    plate: '',
-    plan: '',
-    monthlyValue: '',
+    insurer: '',
+    installments: '',
     dueDate: '',
+    cancelDate: '',
+    producer: '',
+    policy: '',
     notes: '',
   });
 
@@ -38,9 +37,9 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
     e.preventDefault();
     onAdd({
       ...form,
-      monthlyValue: parseFloat(form.monthlyValue) || 0,
+      installments: parseInt(form.installments) || 0,
     });
-    setForm({ name: '', phone: '', email: '', vehicle: '', vehicleType: 'car', plate: '', plan: '', monthlyValue: '', dueDate: '', notes: '' });
+    setForm({ name: '', phone: '', email: '', insurer: '', installments: '', dueDate: '', cancelDate: '', producer: '', policy: '', notes: '' });
     setOpen(false);
   }
 
@@ -68,14 +67,14 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Nome *</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Nome do Cliente *</label>
             <input
               required
               type="text"
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={(e) => setForm({ ...form, name: e.target.value.toUpperCase() })}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="Nome completo"
+              placeholder="NOME COMPLETO"
             />
           </div>
           <div>
@@ -101,67 +100,28 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Veículo *</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Seguradora *</label>
             <input
               required
               type="text"
-              value={form.vehicle}
-              onChange={(e) => setForm({ ...form, vehicle: e.target.value })}
+              value={form.insurer}
+              onChange={(e) => setForm({ ...form, insurer: e.target.value.toUpperCase() })}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="Ex: Toyota Corolla 2024"
+              placeholder="Ex: TOKIO, ALIRO, ALLI"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Tipo *</label>
-            <select
-              value={form.vehicleType}
-              onChange={(e) => setForm({ ...form, vehicleType: e.target.value as VehicleType })}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="car">Carro</option>
-              <option value="motorcycle">Moto</option>
-              <option value="truck">Caminhão</option>
-              <option value="van">Van/Utilitário</option>
-              <option value="fleet">Frota</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Placa *</label>
-            <input
-              required
-              type="text"
-              value={form.plate}
-              onChange={(e) => setForm({ ...form, plate: e.target.value.toUpperCase() })}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="ABC-1D23"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Plano *</label>
-            <input
-              required
-              type="text"
-              value={form.plan}
-              onChange={(e) => setForm({ ...form, plan: e.target.value })}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="Ex: Proteção Completa"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Valor Mensal *</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Parcelas *</label>
             <input
               required
               type="number"
-              step="0.01"
-              value={form.monthlyValue}
-              onChange={(e) => setForm({ ...form, monthlyValue: e.target.value })}
+              min="1"
+              value={form.installments}
+              onChange={(e) => setForm({ ...form, installments: e.target.value })}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="159.90"
+              placeholder="10"
             />
           </div>
           <div>
@@ -174,17 +134,39 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Produtor</label>
+            <input
+              type="text"
+              value={form.producer}
+              onChange={(e) => setForm({ ...form, producer: e.target.value.toUpperCase() })}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Ex: JULIO"
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Observações</label>
-          <input
-            type="text"
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="Anotações opcionais..."
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Apólice</label>
+            <input
+              type="text"
+              value={form.policy}
+              onChange={(e) => setForm({ ...form, policy: e.target.value })}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Número da apólice"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Observações</label>
+            <input
+              type="text"
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="Anotações opcionais..."
+            />
+          </div>
         </div>
 
         <button
