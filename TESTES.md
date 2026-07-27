@@ -160,3 +160,31 @@ o isolamento. Resultado da última execução — **10 de 10 passaram**:
 Isso **não substitui** o Teste 1 lá em cima: aqui o `auth.uid()` foi simulado.
 No Supabase de verdade ele vem do token do login — por isso vale repetir o teste
 com duas contas reais antes de publicar.
+
+---
+
+## Teste 4 — Financeiro por papel (automático, também já rodei)
+
+`sql/testes/teste_financeiro.sql` roda em cima do teste anterior e checa a regra
+dos papéis no dinheiro. Resultado da última execução — **12 de 12 passaram**:
+
+| # | O que testa | Resultado |
+|---|---|---|
+| 1 | Comissão (50%) e taxa de crédito (3,99%) calculadas pelo banco | R$ 100 → taxa 3,99 · líquido 96,01 · comissão 50,00 |
+| 2 | Dono vê todas as vendas | 2 de 2 |
+| 3 | Recepção vê **só a venda de hoje** | 1 (a de ontem sumiu) |
+| 4 | Recepção abre o relatório do mês | bloqueado |
+| 5 | Recepção lista despesas | 0 linhas |
+| 6 | Barbeiro vê as vendas dele | 2 |
+| 7 | Barbeiro abre o ranking geral | bloqueado |
+| 8 | Comissão do barbeiro | R$ 80 (50% de R$ 160) |
+| 9 | Barbeiro pede a comissão de outro pelo id | id ignorado, devolve a dele |
+| 10 | Vendas de hoje e dinheiro esperado no caixa | R$ 60 / R$ 60 |
+| 11 | Recepção apaga uma venda | 0 apagadas |
+| 12 | Dono da outra barbearia vê essas vendas | 0 |
+
+Para rodar por conta própria, num Postgres local:
+
+```bash
+psql -f sql/testes/teste_rls.sql -f sql/testes/teste_financeiro.sql
+```

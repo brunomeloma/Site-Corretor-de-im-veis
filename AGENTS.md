@@ -33,3 +33,6 @@ Sistema SaaS de gestão para barbearias. **Não é um projeto Next.js/React.**
   (`barbeiro`/`recepcao`) não pode inserir em `barbearias` (policy + `sou_funcionario()`);
   o login sempre confere `membros` ANTES de considerar posse.
 - Toda mudança de segurança precisa passar em `sql/testes/teste_rls.sql`.
+- **Financeiro por papel** (migração 003): recepção só enxerga o dia de hoje,
+  barbeiro só o que é dele, relatórios só do dono — tudo checado no banco
+  (policies + funções que validam `meu_papel()`), nunca só na tela.

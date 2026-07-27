@@ -19,7 +19,10 @@ nova-senha.html         → tela de redefinir senha
 manifest.webmanifest    → deixa instalar como app no celular (PWA)
 vercel.json             → configuração da publicação
 sql/
-  001_base.sql          → cria as tabelas e a segurança no Supabase
+  001_base.sql          → tabelas e segurança (agenda, clientes, equipe)
+  002_trava_barbearia_fantasma.sql → impede funcionário de virar dono
+  003_financeiro.sql    → vendas, comissões, despesas, caixa e relatórios
+  testes/               → testes automáticos de segurança (rodam num Postgres limpo)
 assets/
   css/style.css         → todo o visual
   img/icone.svg         → ícone do app
@@ -32,6 +35,7 @@ assets/
     app.js              → o "cérebro": sessão, papel do usuário, menu, telas
     telas/
       agenda.js   clientes.js   servicos.js   barbeiros.js   ajustes.js
+      caixa.js    relatorios.js  ganhos.js
 ```
 
 ---
@@ -49,11 +53,25 @@ assets/
 - Papéis: **dono** vê tudo; **barbeiro** vê só a própria agenda; **recepção** agenda sem ver ajustes de negócio
 - Tema claro/escuro, celular, instalável como app, e **backup** em arquivo
 
+## O que já funciona (Etapa 2 — Financeiro)
+
+- **Caixa**: registrar venda com vários itens, desconto e forma de pagamento
+  (dinheiro, Pix, débito, crédito), com a **taxa da maquininha descontada sozinha**
+- Ao marcar um atendimento como "atendido", o sistema já oferece **cobrar**, com
+  cliente, barbeiro, serviço e preço preenchidos
+- **"Vendas de hoje"** para a recepção (zera todo dia) x **faturamento do mês** só para o dono
+- **Comissão automática** por barbeiro (o % fica congelado na hora da venda)
+- **Meus ganhos**: o barbeiro vê o que produziu e quanto tem a receber — só dele
+- **Fechamento de caixa**: quanto de dinheiro deveria ter na gaveta x quanto deu
+- **Despesas** e **relatórios**: faturamento, sobra no fim, ranking de barbeiros,
+  serviços mais vendidos e horários de pico
+- Taxas das maquininhas configuráveis pelo dono
+
 ## O que vem nas próximas etapas
 
-Financeiro e caixa · comissões calculadas · relatórios · produtos/estoque ·
-fidelidade · logins da equipe (função serverless) · notificações push ·
-link público de auto-agendamento · painel do admin do site · cobrança da assinatura.
+Logins da equipe (função serverless) · notificações push · link público de
+auto-agendamento · produtos/estoque · fidelidade · painel do admin do site ·
+cobrança da assinatura.
 
 ---
 
@@ -65,8 +83,10 @@ link público de auto-agendamento · painel do admin do site · cobrança da ass
 2. Menu da esquerda → **SQL Editor** → **New query**.
 3. Abra o arquivo `sql/001_base.sql` deste repositório, copie **tudo** e cole lá.
 4. Clique em **Run**. Deve aparecer *Success*.
-5. Repita os passos 2 a 4 com o arquivo `sql/002_trava_barbearia_fantasma.sql`
-   (ele impede que um login de funcionário vire dono de uma barbearia vazia).
+5. Repita os passos 2 a 4 com `sql/002_trava_barbearia_fantasma.sql`
+   (impede que um login de funcionário vire dono de uma barbearia vazia).
+6. Repita de novo com `sql/003_financeiro.sql`
+   (vendas, comissões, despesas, caixa e relatórios).
 
 > Esse script **não apaga nada**. Pode rodar de novo sem medo.
 

@@ -13,6 +13,9 @@ import * as Clientes from './telas/clientes.js';
 import * as Servicos from './telas/servicos.js';
 import * as Barbeiros from './telas/barbeiros.js';
 import * as Ajustes from './telas/ajustes.js';
+import * as Caixa from './telas/caixa.js';
+import * as Relatorios from './telas/relatorios.js';
+import * as Ganhos from './telas/ganhos.js';
 
 iniciaTema();
 
@@ -25,13 +28,18 @@ export const estado = {
 };
 
 export const podeVerFinanceiro = () => estado.papel === 'dono';
+export const ehDono = () => estado.papel === 'dono';
 
+// `principal` = aparece na barra de baixo do celular (no máximo 5).
 const TELAS = {
-  agenda:    { titulo: 'Agenda',    ico: '📅', mod: Agenda,    papeis: ['dono', 'barbeiro', 'recepcao'] },
-  clientes:  { titulo: 'Clientes',  ico: '👤', mod: Clientes,  papeis: ['dono', 'barbeiro', 'recepcao'] },
-  servicos:  { titulo: 'Serviços',  ico: '✂️', mod: Servicos,  papeis: ['dono'] },
-  barbeiros: { titulo: 'Barbeiros', ico: '💈', mod: Barbeiros, papeis: ['dono'] },
-  ajustes:   { titulo: 'Ajustes',   ico: '⚙️', mod: Ajustes,   papeis: ['dono', 'barbeiro', 'recepcao'] }
+  agenda:     { titulo: 'Agenda',     ico: '📅', mod: Agenda,     papeis: ['dono', 'barbeiro', 'recepcao'], principal: true },
+  clientes:   { titulo: 'Clientes',   ico: '👤', mod: Clientes,   papeis: ['dono', 'barbeiro', 'recepcao'], principal: true },
+  caixa:      { titulo: 'Caixa',      ico: '🧾', mod: Caixa,      papeis: ['dono', 'recepcao'], principal: true },
+  ganhos:     { titulo: 'Meus ganhos',ico: '💰', mod: Ganhos,     papeis: ['barbeiro'], principal: true },
+  relatorios: { titulo: 'Relatórios', ico: '📊', mod: Relatorios, papeis: ['dono'], principal: true },
+  servicos:   { titulo: 'Serviços',   ico: '✂️', mod: Servicos,   papeis: ['dono'] },
+  barbeiros:  { titulo: 'Barbeiros',  ico: '💈', mod: Barbeiros,  papeis: ['dono'] },
+  ajustes:    { titulo: 'Ajustes',    ico: '⚙️', mod: Ajustes,    papeis: ['dono', 'barbeiro', 'recepcao'], principal: true }
 };
 
 /* ------------------------------ partida ----------------------------- */
@@ -80,6 +88,10 @@ async function carregarContexto() {
       .eq('barbearia_id', estado.barbearia.id).eq('user_id', estado.user.id).maybeSingle();
     estado.barbeiroId = b?.id || null;
   }
+
+  const { data: taxas } = await sb.from('config_financeiro').select('*')
+    .eq('barbearia_id', estado.barbearia.id).maybeSingle();
+  estado.taxas = taxas || {};
 
   aplicaCor(estado.barbearia.cor);
   montarShell();
@@ -211,7 +223,12 @@ function montarShell() {
       <main class="main" id="conteudo"></main>
     </div>
 
-    <nav class="barra-inferior" id="navMobile" aria-label="Menu">${itens}</nav>`;
+    <nav class="barra-inferior" id="navMobile" aria-label="Menu">${
+      menu.filter(([, t]) => t.principal).map(([id, t]) => `
+        <button class="nav-item" data-tela="${id}">
+          <span class="ico" aria-hidden="true">${t.ico}</span> ${esc(t.titulo.split(' ')[0])}
+        </button>`).join('')
+    }</nav>`;
 
   $('#btnTema').addEventListener('click', alternaTema);
   $('#btnSair').addEventListener('click', sair);

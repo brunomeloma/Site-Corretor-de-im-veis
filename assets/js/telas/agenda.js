@@ -4,6 +4,7 @@
    ===================================================================== */
 import { sb, traduzErro } from '../supabase.js';
 import { estado } from '../app.js';
+import { formVenda } from './caixa.js';
 import {
   $, esc, modal, confirmar, aviso, erro as toastErro, hojeIso, somaDias, dataBonita,
   montaData, horaDe, minutosDe, horaDeMinutos, money, soDigitos, estadoVazio, esqueleto
@@ -187,6 +188,19 @@ function linhaAg(minuto, a) {
     </div>`;
 }
 
+/** Abre a venda já preenchida a partir do atendimento concluído. */
+function cobrar(a, servico, cliente, nome) {
+  if (!servico) return;
+  formVenda({
+    agendamento_id: a.id,
+    cliente_id: cliente?.id || null,
+    cliente_nome: cliente ? null : nome,
+    barbeiro_id: a.barbeiro_id,
+    servico, preco: a.preco,
+    barbeiros: dados.barbeiros, servicos: dados.servicos, clientes: dados.clientes
+  }, () => trocarDia(dia));
+}
+
 /* ----------------------- novo / editar agendamento ------------------ */
 function formAgendamento({ id, barbeiro_id, hora }) {
   const ag = id ? dados.agendamentos.find((a) => a.id === id) : null;
@@ -329,9 +343,14 @@ function detalhe(a) {
 
   dlg.querySelectorAll('[data-status]').forEach((b) =>
     b.addEventListener('click', async () => {
-      const { error } = await sb.from('agendamentos').update({ status: b.dataset.status }).eq('id', a.id);
+      const novo = b.dataset.status;
+      const { error } = await sb.from('agendamentos').update({ status: novo }).eq('id', a.id);
       if (error) return toastErro(traduzErro(error));
-      dlg.close(); aviso('Status atualizado.'); trocarDia(dia);
+      dlg.close();
+      aviso('Status atualizado.');
+      await trocarDia(dia);
+      // Atendeu? já oferece registrar o pagamento, com tudo preenchido.
+      if (novo === 'atendido') cobrar(a, servico, cliente, nome);
     }));
 
   dlg.querySelector('[data-editar]').addEventListener('click', () => {
