@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0f14">
+  <title>BARBER PRO — Gestão para Barbearias</title>
+  <meta name="description" content="Sistema de gestão para barbearias: agenda, clientes, financeiro e comissões.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/assets/img/icone.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="/assets/vendor/supabase.js"></script>
+</head>
+<body>
+  <main class="auth-wrap">
+    <div class="auth-card">
+      <div class="logo" style="justify-content:center;margin-bottom:1.2rem">
+        <span class="logo-mark">✂</span>
+        <span>BARBER<span style="color:var(--brand)">PRO</span></span>
+      </div>
+
+      <!-- Telinha de configuração (só aparece se faltar a chave do Supabase) -->
+      <section id="setup" class="card" hidden>
+        <h1>Configurar o sistema</h1>
+        <p class="muted" style="font-size:.9rem">
+          Cole aqui os dados do seu projeto no Supabase. Você encontra em
+          <b>Project Settings → API</b>. Esses dados são públicos e ficam salvos neste navegador.
+        </p>
+        <div class="campo">
+          <label for="cfgUrl">Project URL</label>
+          <input id="cfgUrl" placeholder="https://xxxxxxxx.supabase.co" autocomplete="off">
+        </div>
+        <div class="campo">
+          <label for="cfgKey">Chave anon public</label>
+          <input id="cfgKey" placeholder="eyJhbGciOi..." autocomplete="off">
+        </div>
+        <p id="cfgErro" class="erro-msg"></p>
+        <button id="cfgSalvar" class="btn btn-primary btn-block">Salvar e continuar</button>
+      </section>
+
+      <!-- Entrar / Criar conta -->
+      <section id="auth" class="card" hidden>
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tabEntrar" aria-selected="true">Entrar</button>
+          <button role="tab" id="tabCriar" aria-selected="false">Criar conta</button>
+        </div>
+
+        <form id="formEntrar">
+          <div class="campo">
+            <label for="email">E-mail</label>
+            <input id="email" type="email" autocomplete="email" required>
+          </div>
+          <div class="campo">
+            <label for="senha">Senha</label>
+            <input id="senha" type="password" autocomplete="current-password" required>
+          </div>
+          <p id="msgEntrar" class="erro-msg"></p>
+          <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+          <p style="text-align:center;margin:.9rem 0 0">
+            <button type="button" id="linkReset" class="btn btn-ghost btn-sm">Esqueci minha senha</button>
+          </p>
+        </form>
+
+        <form id="formCriar" hidden>
+          <p class="muted" style="font-size:.9rem;margin-top:0">
+            Crie a conta do <b>dono da barbearia</b>. A equipe (barbeiros e recepção)
+            é cadastrada depois, por dentro do sistema.
+          </p>
+          <div class="campo">
+            <label for="cNome">Seu nome</label>
+            <input id="cNome" required autocomplete="name">
+          </div>
+          <div class="campo">
+            <label for="cEmail">E-mail</label>
+            <input id="cEmail" type="email" required autocomplete="email">
+          </div>
+          <div class="campo">
+            <label for="cSenha">Senha (mínimo 6 caracteres)</label>
+            <input id="cSenha" type="password" minlength="6" required autocomplete="new-password">
+          </div>
+          <p id="msgCriar" class="erro-msg"></p>
+          <button class="btn btn-primary btn-block" type="submit">Criar minha conta</button>
+        </form>
+      </section>
+
+      <p class="muted" style="text-align:center;font-size:.8rem;margin-top:1rem">
+        Teste grátis por 14 dias. Sem cartão de crédito.
+      </p>
+    </div>
+  </main>
+
+  <script type="module" src="/assets/js/entrar.js"></script>
+</body>
+</html>

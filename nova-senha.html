@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nova senha — BARBER PRO</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="/assets/vendor/supabase.js"></script>
+</head>
+<body>
+  <main class="auth-wrap">
+    <form class="auth-card card" id="form">
+      <h1>Criar nova senha</h1>
+      <p class="muted" style="font-size:.9rem">Escolha uma senha nova para sua conta.</p>
+      <div class="campo">
+        <label for="s1">Nova senha</label>
+        <input id="s1" type="password" minlength="6" required autocomplete="new-password">
+      </div>
+      <div class="campo">
+        <label for="s2">Repita a senha</label>
+        <input id="s2" type="password" minlength="6" required autocomplete="new-password">
+      </div>
+      <p id="msg" class="erro-msg"></p>
+      <button class="btn btn-primary btn-block">Salvar nova senha</button>
+    </form>
+  </main>
+
+  <script type="module">
+    import { sb, traduzErro } from '/assets/js/supabase.js';
+    import { $, iniciaTema, aviso } from '/assets/js/ui.js';
+    iniciaTema();
+
+    $('#form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const s1 = $('#s1').value, s2 = $('#s2').value;
+      if (s1 !== s2) { $('#msg').textContent = 'As duas senhas precisam ser iguais.'; return; }
+      const { error } = await sb.auth.updateUser({ password: s1 });
+      if (error) { $('#msg').textContent = traduzErro(error); return; }
+      aviso('Senha alterada! Entrando...');
+      setTimeout(() => location.replace('/app.html'), 900);
+    });
+  </script>
+</body>
+</html>
