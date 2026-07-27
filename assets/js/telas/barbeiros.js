@@ -2,7 +2,7 @@
 import { sb, traduzErro } from '../supabase.js';
 import { estado } from '../app.js';
 import {
-  $, esc, modal, confirmar, aviso, erro as toastErro, mascaraTelefone, DIAS
+  $, esc, modal, confirmar, aviso, erro as toastErro, mascaraTelefone, DIAS, estadoVazio
 } from '../ui.js';
 
 let lista = [];
@@ -35,7 +35,8 @@ function desenha() {
       <button class="btn btn-primary" id="btnNovo">+ Barbeiro</button>
     </div>
     <div class="card">
-      ${lista.length === 0 ? '<div class="vazio">Nenhum barbeiro cadastrado. Cadastre o primeiro para a agenda funcionar.</div>' : `
+      ${lista.length === 0 ? estadoVazio({ icone: '💈', titulo: 'Nenhum barbeiro cadastrado',
+          texto: 'Cadastre quem atende, com os dias e horários de trabalho, para a agenda funcionar.' }) : `
         <div class="tabela-wrap"><table>
           <thead><tr><th></th><th>Nome</th><th>Comissão</th><th>Dias de trabalho</th><th>Situação</th><th></th></tr></thead>
           <tbody>${lista.map((b) => `
@@ -49,7 +50,7 @@ function desenha() {
             </tr>`).join('')}
           </tbody></table></div>`}
     </div>
-    <p class="muted" style="font-size:.85rem;margin-top:1rem">
+    <p class="muted t-sm" style="margin-top:1rem">
       O login do barbeiro (para ele ver a própria agenda no celular) entra na próxima etapa.
     </p>`;
 

@@ -1,5 +1,5 @@
 /* Tela de entrada: configuração inicial, login, cadastro e reset de senha. */
-import { configurado, salvarConfig } from './config.js';
+import { configurado, salvarConfig, ehDesenvolvimento } from './config.js';
 import { sb, traduzErro } from './supabase.js';
 import { $, iniciaTema, aviso, erro as toastErro, modal } from './ui.js';
 
@@ -8,8 +8,12 @@ iniciaTema();
 const setup = $('#setup');
 const auth = $('#auth');
 
-/* ------------------------- 1. configuração -------------------------- */
-if (!configurado()) {
+/* ------------------------- 1. configuração --------------------------
+   Em produção as chaves vêm de config.js. A tela de setup só existe
+   em localhost; sem chaves no ar, o cliente vê "indisponível".        */
+if (!configurado() && !ehDesenvolvimento) {
+  $('#indisponivel').hidden = false;
+} else if (!configurado()) {
   setup.hidden = false;
   $('#cfgSalvar').addEventListener('click', () => {
     const url = $('#cfgUrl').value.trim();

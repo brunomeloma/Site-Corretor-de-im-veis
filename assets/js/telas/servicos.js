@@ -1,7 +1,7 @@
 /* Tela SERVIÇOS — nome, duração e preço (só o dono acessa). */
 import { sb, traduzErro } from '../supabase.js';
 import { estado } from '../app.js';
-import { $, esc, modal, confirmar, aviso, erro as toastErro, money } from '../ui.js';
+import { $, esc, modal, confirmar, aviso, erro as toastErro, money, estadoVazio } from '../ui.js';
 
 let lista = [];
 let caixa;
@@ -29,7 +29,8 @@ function desenha() {
       <button class="btn btn-primary" id="btnNovo">+ Serviço</button>
     </div>
     <div class="card">
-      ${lista.length === 0 ? '<div class="vazio">Nenhum serviço cadastrado.</div>' : `
+      ${lista.length === 0 ? estadoVazio({ icone: '✂️', titulo: 'Nenhum serviço cadastrado',
+          texto: 'Cadastre corte, barba, combo... com preço e duração — a agenda usa a duração para reservar o horário.' }) : `
         <div class="tabela-wrap"><table>
           <thead><tr><th>Serviço</th><th>Duração</th><th>Preço</th><th>Situação</th><th></th></tr></thead>
           <tbody>${lista.map((s) => `

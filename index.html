@@ -14,15 +14,24 @@
 <body>
   <main class="auth-wrap">
     <div class="auth-card">
-      <div class="logo" style="justify-content:center;margin-bottom:1.2rem">
-        <span class="logo-mark">✂</span>
+      <div class="marca-topo">
+        <span class="logo-mark" aria-hidden="true">✂</span>
         <span>BARBER<span style="color:var(--brand)">PRO</span></span>
       </div>
 
-      <!-- Telinha de configuração (só aparece se faltar a chave do Supabase) -->
+      <!-- Sistema sem chaves em produção: o cliente vê isto, nunca um formulário -->
+      <section id="indisponivel" class="card" hidden>
+        <h1>Sistema temporariamente indisponível</h1>
+        <p class="muted">
+          Estamos em manutenção. Tente novamente em alguns minutos.
+        </p>
+      </section>
+
+      <!-- Telinha de configuração — SÓ em localhost (ferramenta de desenvolvimento) -->
       <section id="setup" class="card" hidden>
         <h1>Configurar o sistema</h1>
-        <p class="muted" style="font-size:.9rem">
+        <p class="chip chip-warn">modo desenvolvimento</p>
+        <p class="muted t-sm">
           Cole aqui os dados do seu projeto no Supabase. Você encontra em
           <b>Project Settings → API</b>. Esses dados são públicos e ficam salvos neste navegador.
         </p>
@@ -83,7 +92,7 @@
         </form>
       </section>
 
-      <p class="muted" style="text-align:center;font-size:.8rem;margin-top:1rem">
+      <p class="muted t-xs" style="text-align:center;margin-top:1.2rem">
         Teste grátis por 14 dias. Sem cartão de crédito.
       </p>
     </div>

@@ -26,12 +26,34 @@ export function toast(msg, tipo = '') {
   }
   const el = document.createElement('div');
   el.className = 'toast ' + tipo;
-  el.textContent = msg;
+  el.setAttribute('role', tipo === 'erro' ? 'alert' : 'status');
+  el.innerHTML = `<span class="ico">${tipo === 'erro' ? '⚠️' : tipo === 'ok' ? '✅' : 'ℹ️'}</span><span></span>`;
+  el.lastElementChild.textContent = msg;   // texto puro: nada de HTML aqui
   caixa.appendChild(el);
   setTimeout(() => el.remove(), 4500);
 }
 export const aviso = (m) => toast(m, 'ok');
 export const erro = (m) => toast(m, 'erro');
+
+/* --------------------- estados vazios e carregando ------------------ */
+/** Bloco bonito de "ainda não tem nada aqui". Devolve HTML já escapado. */
+export function estadoVazio({ icone = '📭', titulo, texto = '', acao = '' }) {
+  return `
+    <div class="estado-vazio">
+      <div class="estado-icone" aria-hidden="true">${esc(icone)}</div>
+      <h3>${esc(titulo)}</h3>
+      ${texto ? `<p>${esc(texto)}</p>` : ''}
+      ${acao}
+    </div>`;
+}
+
+/** Esqueleto cinza piscando enquanto os dados não chegam. */
+export function esqueleto(tipo = 'lista') {
+  if (tipo === 'colunas') {
+    return `<div class="skeletons">${'<div class="skeleton skeleton-card"></div>'.repeat(3)}</div>`;
+  }
+  return `<div class="card">${'<div class="skeleton skeleton-linha"></div>'.repeat(6)}</div>`;
+}
 
 /* ------------------------------ modal ------------------------------- */
 /**

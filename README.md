@@ -65,6 +65,8 @@ link público de auto-agendamento · painel do admin do site · cobrança da ass
 2. Menu da esquerda → **SQL Editor** → **New query**.
 3. Abra o arquivo `sql/001_base.sql` deste repositório, copie **tudo** e cole lá.
 4. Clique em **Run**. Deve aparecer *Success*.
+5. Repita os passos 2 a 4 com o arquivo `sql/002_trava_barbearia_fantasma.sql`
+   (ele impede que um login de funcionário vire dono de uma barbearia vazia).
 
 > Esse script **não apaga nada**. Pode rodar de novo sem medo.
 
@@ -81,10 +83,11 @@ Esses dois valores são **públicos** — podem ficar no código sem risco.
 
 ### 3. Colocar as chaves no sistema
 
-Duas opções:
+**Modelo SaaS:** existe UM único projeto Supabase — o seu. Todas as barbearias
+usam a mesma URL e a mesma chave anon. O barbeiro cliente nunca vê tela de chave
+nenhuma e não tem Supabase próprio.
 
-- **Fácil:** abra o site, cole os dois valores na telinha que aparece e clique em salvar.
-- **Definitivo (recomendado quando publicar):** edite `assets/js/config.js` e preencha:
+Edite `assets/js/config.js` e preencha **uma vez**:
 
 ```js
 const PADRAO = {
@@ -93,13 +96,19 @@ const PADRAO = {
 };
 ```
 
+A telinha de "colar as chaves" **só aparece em `localhost`** — é ferramenta de
+desenvolvimento. Publicado sem chaves, o cliente vê "sistema temporariamente
+indisponível", nunca um formulário pedindo chave.
+
 ### 4. Ajustar o login por e-mail
 
 No Supabase → **Authentication → Providers → Email**:
 
 - Deixe **Enable Email provider** ligado.
 - Para testar rápido, **desligue "Confirm email"** (aí a conta já entra direto).
-  Quando for pra valer, ligue de novo.
+- **Antes de abrir para clientes de verdade, religue "Confirm email"** e configure
+  um SMTP próprio (Settings → Authentication → SMTP). O e-mail padrão do Supabase
+  tem limite baixo e cai em spam.
 
 Em **Authentication → URL Configuration**, coloque em *Site URL* o endereço do seu
 site (ex.: `https://barberpro.vercel.app`) — é pra onde o link de "nova senha" volta.
@@ -122,6 +131,11 @@ E abra `http://localhost:8080`.
 (Não funciona abrindo o arquivo com duplo clique — precisa de um servidor.)
 
 ---
+
+## Testes obrigatórios
+
+O roteiro completo (isolamento entre contas, trava de horário e barbearia
+fantasma) está em **[TESTES.md](TESTES.md)**. Faça antes de publicar.
 
 ## Roteiro de teste da Etapa 1
 

@@ -5,7 +5,7 @@
 import { configurado } from './config.js';
 import { sb, traduzErro } from './supabase.js';
 import {
-  $, esc, iniciaTema, alternaTema, aplicaCor, erro as toastErro, aviso, modal
+  $, esc, iniciaTema, alternaTema, aplicaCor, erro as toastErro, aviso, modal, esqueleto
 } from './ui.js';
 
 import * as Agenda from './telas/agenda.js';
@@ -59,7 +59,14 @@ async function carregarContexto() {
 
   if (error) { telaErroFatal(traduzErro(error)); return; }
 
-  if (!membros || membros.length === 0) { telaCriarBarbearia(); return; }
+  // Sem vínculo em `membros`: ou é um dono novo, ou é um funcionário que o
+  // dono ainda não vinculou. Funcionário NUNCA ganha barbearia própria.
+  if (!membros || membros.length === 0) {
+    const marca = estado.user.app_metadata?.papel || estado.user.user_metadata?.papel;
+    if (marca === 'barbeiro' || marca === 'recepcao') telaSemVinculo();
+    else telaCriarBarbearia();
+    return;
+  }
 
   const escolhida = localStorage.getItem('bp_barbearia');
   const m = membros.find((x) => x.barbearia_id === escolhida) || membros[0];
@@ -83,8 +90,9 @@ function telaCriarBarbearia() {
   $('#raiz').innerHTML = `
     <main class="auth-wrap">
       <form class="auth-card card" id="formBarbearia">
-        <div class="logo" style="margin-bottom:1rem">
-          <span class="logo-mark">✂</span><span>BARBER<span style="color:var(--brand)">PRO</span></span>
+        <div class="marca-topo">
+          <span class="logo-mark" aria-hidden="true">✂</span>
+          <span>BARBER<span style="color:var(--brand)">PRO</span></span>
         </div>
         <h1>Vamos criar sua barbearia</h1>
         <p class="muted" style="font-size:.9rem">
@@ -101,7 +109,7 @@ function telaCriarBarbearia() {
           </div>
           <div class="campo">
             <label for="bCor">Cor da marca</label>
-            <input id="bCor" type="color" value="#c9a227" style="height:44px;padding:.2rem">
+            <input id="bCor" type="color" value="#c9a227">
           </div>
         </div>
         <p id="bMsg" class="erro-msg"></p>
@@ -132,6 +140,22 @@ function telaCriarBarbearia() {
   });
 }
 
+function telaSemVinculo() {
+  $('#raiz').innerHTML = `
+    <main class="auth-wrap"><div class="auth-card card">
+      <div class="estado-vazio">
+        <div class="estado-icone">🔒</div>
+        <h1>Conta ainda não liberada</h1>
+        <p class="muted">
+          Seu acesso existe, mas ainda não foi ligado a nenhuma barbearia.
+          Peça ao dono da barbearia para liberar seu login.
+        </p>
+      </div>
+      <button class="btn btn-block" id="sairAqui">Sair</button>
+    </div></main>`;
+  $('#sairAqui').addEventListener('click', sair);
+}
+
 function telaErroFatal(msg) {
   $('#raiz').innerHTML = `
     <main class="auth-wrap"><div class="auth-card card">
@@ -148,55 +172,61 @@ function menuDoPapel() {
 
 function montarShell() {
   const b = estado.barbearia;
-  const itens = menuDoPapel().map(([id, t]) => `
+  const menu = menuDoPapel();
+  const itens = menu.map(([id, t]) => `
     <button class="nav-item" data-tela="${id}">
-      <span class="ico">${t.ico}</span> ${esc(t.titulo)}
+      <span class="ico" aria-hidden="true">${t.ico}</span> ${esc(t.titulo)}
     </button>`).join('');
 
   $('#raiz').innerHTML = `
-    <div class="topbar-mobile">
-      <button class="btn btn-sm btn-ghost" id="btnMenu" aria-label="Menu">☰</button>
+    <header class="topbar">
+      <span class="logo-mark" aria-hidden="true">✂</span>
       <b>${esc(b.nome)}</b>
-    </div>
+      <div class="topbar-acoes">
+        <button class="btn btn-sm btn-ghost btn-icone" id="btnTemaTopo" aria-label="Trocar tema">🌗</button>
+        <button class="btn btn-sm btn-ghost btn-icone" id="btnSairTopo" aria-label="Sair">🚪</button>
+      </div>
+    </header>
+
     <div class="app">
-      <aside class="side" id="side">
-        <div class="logo">
-          <span class="logo-mark">✂</span>
-          <span style="font-size:.95rem">${esc(b.nome)}</span>
+      <aside class="side">
+        <div class="side-marca">
+          <span class="logo-mark" aria-hidden="true">✂</span>
+          <span>
+            <b>${esc(b.nome)}</b>
+            <span>BARBER PRO</span>
+          </span>
         </div>
-        <nav id="nav">${itens}</nav>
+        <nav id="nav" aria-label="Menu principal">${itens}</nav>
         <div class="side-foot">
-          <div style="padding:.4rem .7rem;font-size:.8rem" class="muted">
-            ${esc(estado.user.email || '')}<br>
-            <span class="chip">${esc(rotuloPapel(estado.papel))}</span>
+          <div class="usuario">
+            <b>${esc(estado.user.email || '')}</b>
+            <span class="chip chip-marca">${esc(rotuloPapel(estado.papel))}</span>
           </div>
-          <button class="nav-item" id="btnTema"><span class="ico">🌗</span> Tema claro/escuro</button>
-          <button class="nav-item" id="btnSair"><span class="ico">🚪</span> Sair</button>
+          <button class="nav-item" id="btnTema"><span class="ico" aria-hidden="true">🌗</span> Tema claro/escuro</button>
+          <button class="nav-item" id="btnSair"><span class="ico" aria-hidden="true">🚪</span> Sair</button>
         </div>
       </aside>
+
       <main class="main" id="conteudo"></main>
-    </div>`;
+    </div>
+
+    <nav class="barra-inferior" id="navMobile" aria-label="Menu">${itens}</nav>`;
 
   $('#btnTema').addEventListener('click', alternaTema);
   $('#btnSair').addEventListener('click', sair);
-  $('#btnMenu')?.addEventListener('click', abreMenu);
-  $('#nav').addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-tela]');
-    if (btn) irPara(btn.dataset.tela);
-  });
+  $('#btnTemaTopo').addEventListener('click', alternaTema);
+  $('#btnSairTopo').addEventListener('click', sair);
+  for (const nav of [$('#nav'), $('#navMobile')]) {
+    nav.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-tela]');
+      if (btn) irPara(btn.dataset.tela);
+    });
+  }
   window.addEventListener('hashchange', () => irPara(location.hash.slice(1)));
 
   avisoAssinatura();
   irPara(location.hash.slice(1) || 'agenda');
-}
-
-function abreMenu() {
-  const side = $('#side');
-  side.classList.add('aberta');
-  const fundo = document.createElement('div');
-  fundo.className = 'backdrop';
-  fundo.addEventListener('click', () => { side.classList.remove('aberta'); fundo.remove(); });
-  document.body.appendChild(fundo);
 }
 
 const rotuloPapel = (p) => ({ dono: 'Dono', barbeiro: 'Barbeiro', recepcao: 'Recepção' }[p] || p);
@@ -209,11 +239,9 @@ export async function irPara(tela) {
 
   document.querySelectorAll('.nav-item[data-tela]').forEach((el) =>
     el.classList.toggle('ativo', el.dataset.tela === alvo));
-  $('#side')?.classList.remove('aberta');
-  document.querySelector('.backdrop')?.remove();
 
   const alvoEl = $('#conteudo');
-  alvoEl.innerHTML = '<div class="carregando">Carregando...</div>';
+  alvoEl.innerHTML = esqueleto(alvo === 'agenda' ? 'colunas' : 'lista');
   try {
     await TELAS[alvo].mod.render(alvoEl);
   } catch (e) {

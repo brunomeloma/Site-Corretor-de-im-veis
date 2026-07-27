@@ -6,7 +6,7 @@ import { sb, traduzErro } from '../supabase.js';
 import { estado } from '../app.js';
 import {
   $, esc, modal, confirmar, aviso, erro as toastErro, hojeIso, somaDias, dataBonita,
-  montaData, horaDe, minutosDe, horaDeMinutos, money, soDigitos
+  montaData, horaDe, minutosDe, horaDeMinutos, money, soDigitos, estadoVazio, esqueleto
 } from '../ui.js';
 
 const PASSO = 30; // tamanho do "quadradinho" de horário, em minutos
@@ -61,12 +61,14 @@ function desenha() {
         <h1>Agenda</h1>
         <p class="muted" style="margin:0">${esc(dataBonita(dia))} · ${total} atendimento(s)</p>
       </div>
-      <div class="agenda-topo" style="margin:0">
-        <button class="btn btn-sm" data-nav="-1">◀</button>
-        <input type="date" id="inputDia" value="${esc(dia)}" style="width:auto">
-        <button class="btn btn-sm" data-nav="1">▶</button>
+      <div class="topo-acoes">
+        <div class="seletor-dia">
+          <button class="btn btn-sm btn-ghost btn-icone" data-nav="-1" aria-label="Dia anterior">◀</button>
+          <input type="date" id="inputDia" value="${esc(dia)}" style="width:auto" aria-label="Data">
+          <button class="btn btn-sm btn-ghost btn-icone" data-nav="1" aria-label="Próximo dia">▶</button>
+        </div>
         <button class="btn btn-sm" id="btnHoje">Hoje</button>
-        <button class="btn btn-primary btn-sm" id="btnNovo">+ Agendar</button>
+        <button class="btn btn-primary" id="btnNovo">+ Agendar</button>
       </div>
     </div>
     <div id="grade"></div>`;
@@ -82,7 +84,7 @@ function desenha() {
 
 async function trocarDia(novo) {
   dia = novo;
-  caixa.innerHTML = '<div class="carregando">Carregando...</div>';
+  caixa.innerHTML = esqueleto('colunas');
   await carregar();
   desenha();
 }
@@ -91,13 +93,16 @@ function desenhaGrade() {
   const grade = $('#grade', caixa);
 
   if (dados.barbeiros.length === 0) {
-    grade.innerHTML = `
-      <div class="card vazio">
-        <p>Nenhum barbeiro cadastrado ainda.</p>
-        ${estado.papel === 'dono'
-          ? '<p class="muted">Vá em <b>Barbeiros</b> no menu e cadastre o primeiro.</p>'
-          : '<p class="muted">Peça ao dono para cadastrar os barbeiros.</p>'}
-      </div>`;
+    grade.innerHTML = `<div class="card card-plano">${estadoVazio({
+      icone: '💈',
+      titulo: 'Nenhum barbeiro na agenda',
+      texto: estado.papel === 'dono'
+        ? 'Cadastre quem atende para a agenda começar a funcionar.'
+        : 'Peça ao dono da barbearia para cadastrar os barbeiros.',
+      acao: estado.papel === 'dono'
+        ? '<button class="btn btn-primary" data-ir-barbeiros>Cadastrar barbeiro</button>' : ''
+    })}</div>`;
+    grade.querySelector('[data-ir-barbeiros]')?.addEventListener('click', () => { location.hash = 'barbeiros'; });
     return;
   }
 
@@ -110,9 +115,7 @@ function desenhaGrade() {
         <div class="coluna-head">
           <span class="ponto" style="background:${esc(b.cor)}"></span>
           <span>${esc(b.nome)}</span>
-          <span class="muted" style="margin-left:auto;font-size:.8rem;font-weight:400">
-            ${ags.filter((a) => a.status !== 'cancelado').length}
-          </span>
+          <span class="contador">${ags.filter((a) => a.status !== 'cancelado').length}</span>
         </div>
         ${linhasDoBarbeiro(b, ags, diaSemana)}
       </section>`;
@@ -146,7 +149,9 @@ function linhasDoBarbeiro(barbeiro, ags, diaSemana) {
 
   const ordenados = [...pontos].sort((a, b) => a - b);
   if (ordenados.length === 0) {
-    return `<div class="vazio" style="padding:1.5rem"><span class="muted">Folga hoje</span></div>`;
+    return `<div class="slot" style="padding:1.4rem;justify-content:center">
+              <span class="muted t-sm">☕ Folga hoje</span>
+            </div>`;
   }
 
   const cancelados = ags.filter((a) => a.status === 'cancelado');
@@ -161,7 +166,7 @@ function linhasDoBarbeiro(barbeiro, ags, diaSemana) {
     html += `
       <div class="slot slot-livre" data-livre="${horaDeMinutos(m)}" data-barbeiro="${esc(barbeiro.id)}">
         <span class="hora">${horaDeMinutos(m)}</span>
-        <span class="add">+ livre</span>
+        <span class="add">+ horário livre</span>
       </div>`;
   }
   html += cancelados.map((a) => linhaAg(minutosDe(horaDe(a.inicio)), a)).join('');
@@ -177,9 +182,7 @@ function linhaAg(minuto, a) {
       <span class="hora">${horaDeMinutos(minuto)}</span>
       <div class="ag ${esc(a.status)}" data-ag="${esc(a.id)}">
         <b>${esc(nome)} ${marca}</b>
-        <span class="muted" style="font-size:.8rem">
-          ${esc(servico?.nome || 'Serviço')} · ${horaDe(a.inicio)}–${horaDe(a.fim)}
-        </span>
+        <span class="detalhe">${esc(servico?.nome || 'Serviço')} · ${horaDe(a.inicio)}–${horaDe(a.fim)}</span>
       </div>
     </div>`;
 }
@@ -314,7 +317,7 @@ function detalhe(a) {
         ${cliente?.telefone ? `<tr><th>Telefone</th><td>${esc(cliente.telefone)}</td></tr>` : ''}
         ${a.observacao ? `<tr><th>Observação</th><td>${esc(a.observacao)}</td></tr>` : ''}
       </table>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem">
+      <div class="modal-acoes">
         <button class="btn btn-sm" data-status="confirmado">☑ Confirmado</button>
         <button class="btn btn-sm" data-status="atendido">✔ Atendido</button>
         <button class="btn btn-sm" data-status="faltou">✖ Faltou</button>

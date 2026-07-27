@@ -25,3 +25,11 @@ Sistema SaaS de gestão para barbearias. **Não é um projeto Next.js/React.**
 - Código e nomes de variáveis em português.
 - Cada tela vive em `assets/js/telas/<nome>.js` e exporta `render(container)`.
 - Cores/tema por variáveis CSS; a cor da barbearia entra em `--brand`.
+
+## Lições que não podem ser esquecidas
+- **Chaves do Supabase**: modelo SaaS com UM projeto só. `assets/js/config.js` é a
+  fonte da verdade. Tela de setup só em `localhost` (`ehDesenvolvimento`).
+- **Nada de barbearia fantasma**: nenhum gatilho em `auth.users`; funcionário
+  (`barbeiro`/`recepcao`) não pode inserir em `barbearias` (policy + `sou_funcionario()`);
+  o login sempre confere `membros` ANTES de considerar posse.
+- Toda mudança de segurança precisa passar em `sql/testes/teste_rls.sql`.

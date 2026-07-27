@@ -3,7 +3,7 @@ import { sb, traduzErro } from '../supabase.js';
 import { estado } from '../app.js';
 import {
   $, esc, modal, confirmar, aviso, erro as toastErro, mascaraTelefone, soDigitos,
-  dataCurta, horaDe, money, iso
+  dataCurta, horaDe, money, iso, estadoVazio
 } from '../ui.js';
 
 let lista = [];
@@ -39,14 +39,17 @@ function desenha() {
         <h1>Clientes</h1>
         <p class="muted" style="margin:0">${lista.length} cadastrado(s)</p>
       </div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <div class="topo-acoes">
         <input id="busca" placeholder="Buscar por nome ou telefone" value="${esc(busca)}" style="width:auto;min-width:220px">
         <button class="btn btn-primary" id="btnNovo">+ Cliente</button>
       </div>
     </div>
     <div class="card">
       ${itens.length === 0
-        ? '<div class="vazio">Nenhum cliente encontrado.</div>'
+        ? estadoVazio(busca
+            ? { icone: '🔎', titulo: 'Nada encontrado', texto: `Nenhum cliente com "${busca}".` }
+            : { icone: '👤', titulo: 'Nenhum cliente ainda',
+                texto: 'Cadastre seus clientes para guardar telefone, preferências e histórico de cortes.' })
         : `<div class="tabela-wrap"><table>
             <thead><tr><th>Nome</th><th>Telefone</th><th>Aniversário</th><th>Observações</th><th></th></tr></thead>
             <tbody>${itens.map((c) => `
@@ -143,7 +146,7 @@ async function historico(c) {
     corpo: `
       <p class="muted" style="margin-top:0">${total} atendimento(s) concluído(s)</p>
       ${c.observacoes ? `<div class="card" style="margin-bottom:1rem"><b>Preferências:</b><br>${esc(c.observacoes)}</div>` : ''}
-      ${data.length === 0 ? '<div class="vazio">Nenhum atendimento ainda.</div>' : `
+      ${data.length === 0 ? estadoVazio({ icone: '✂️', titulo: 'Ainda sem atendimentos', texto: 'O histórico aparece aqui depois do primeiro corte.' }) : `
         <div class="tabela-wrap"><table>
           <thead><tr><th>Data</th><th>Serviço</th><th>Barbeiro</th><th>Valor</th><th>Status</th></tr></thead>
           <tbody>${data.map((a) => `
