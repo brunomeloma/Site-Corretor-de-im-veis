@@ -171,6 +171,16 @@ Ele imprime duas chaves:
 
 4. **Deploy**. O cron das notificações liga sozinho (está no `vercel.json`).
 
+**Atalho:** em vez de cadastrar as 7 variáveis na mão, rode no terminal, dentro da
+pasta do projeto:
+
+```bash
+bash configurar-vercel.sh
+```
+
+Ele gera as chaves VAPID, pergunta as do Supabase, cadastra tudo na Vercel e
+ainda imprime o `config.js` pronto para você colar. Os passos 5 e 6 viram um só.
+
 > ⚠️ A `service_role` dá poder total no banco. Ela só existe na Vercel, nunca no
 > código do site. Se vazar, gere outra no Supabase na hora.
 
