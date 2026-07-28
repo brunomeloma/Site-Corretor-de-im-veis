@@ -16,6 +16,9 @@ import * as Ajustes from './telas/ajustes.js';
 import * as Caixa from './telas/caixa.js';
 import * as Relatorios from './telas/relatorios.js';
 import * as Ganhos from './telas/ganhos.js';
+import * as Equipe from './telas/equipe.js';
+import * as Produtos from './telas/produtos.js';
+import { registraServiceWorker } from './push.js';
 
 iniciaTema();
 
@@ -38,7 +41,9 @@ const TELAS = {
   ganhos:     { titulo: 'Meus ganhos',ico: '💰', mod: Ganhos,     papeis: ['barbeiro'], principal: true },
   relatorios: { titulo: 'Relatórios', ico: '📊', mod: Relatorios, papeis: ['dono'], principal: true },
   servicos:   { titulo: 'Serviços',   ico: '✂️', mod: Servicos,   papeis: ['dono'] },
+  produtos:   { titulo: 'Produtos',   ico: '🧴', mod: Produtos,   papeis: ['dono'] },
   barbeiros:  { titulo: 'Barbeiros',  ico: '💈', mod: Barbeiros,  papeis: ['dono'] },
+  equipe:     { titulo: 'Equipe',     ico: '🔑', mod: Equipe,     papeis: ['dono'] },
   ajustes:    { titulo: 'Ajustes',    ico: '⚙️', mod: Ajustes,    papeis: ['dono', 'barbeiro', 'recepcao'], principal: true }
 };
 
@@ -93,8 +98,13 @@ async function carregarContexto() {
     .eq('barbearia_id', estado.barbearia.id).maybeSingle();
   estado.taxas = taxas || {};
 
+  const { data: souAdmin } = await sb.from('admin_users').select('user_id')
+    .eq('user_id', estado.user.id).maybeSingle();
+  estado.adminDoSite = Boolean(souAdmin);
+
   aplicaCor(estado.barbearia.cor);
   montarShell();
+  registraServiceWorker();
 }
 
 /* --------------------- primeira vez: criar barbearia ---------------- */
@@ -215,6 +225,7 @@ function montarShell() {
             <b>${esc(estado.user.email || '')}</b>
             <span class="chip chip-marca">${esc(rotuloPapel(estado.papel))}</span>
           </div>
+          ${estado.adminDoSite ? '<a class="nav-item" href="/admin.html"><span class="ico" aria-hidden="true">🛡️</span> Painel do site</a>' : ''}
           <button class="nav-item" id="btnTema"><span class="ico" aria-hidden="true">🌗</span> Tema claro/escuro</button>
           <button class="nav-item" id="btnSair"><span class="ico" aria-hidden="true">🚪</span> Sair</button>
         </div>
@@ -268,21 +279,22 @@ export async function irPara(tela) {
 }
 
 /* --------------------------- assinatura ----------------------------- */
-function avisoAssinatura() {
-  const b = estado.barbearia;
-  const dias = Math.ceil((new Date(b.expira_em + 'T23:59:59') - new Date()) / 86400000);
-  if (b.status === 'ativa') return;
-  if (dias < 0) {
+async function avisoAssinatura() {
+  const { data } = await sb.rpc('situacao_assinatura', { p_barbearia: estado.barbearia.id });
+  estado.assinatura = data || {};
+  if (!data) return;
+
+  if (data.bloqueado) {
     modal({
-      titulo: 'Seu período de teste terminou',
-      corpo: `<p>Para continuar usando o BARBER PRO, ative sua assinatura.
-              Seus dados continuam guardados.</p>
-              <p class="muted">A tela de pagamento entra numa próxima etapa.</p>`,
+      titulo: data.status === 'trial' ? 'Seu teste grátis terminou' : 'Assinatura pendente',
+      corpo: `<p>${esc(data.texto)}. Para continuar usando o BARBER PRO, fale com a gente
+              e ative sua assinatura de ${esc(String(data.valor_mensal))} por mês.</p>
+              <p class="muted">Seus dados continuam guardados, nada foi perdido.</p>`,
       okTexto: 'Entendi',
       onOk: () => true
     });
-  } else if (dias <= 5) {
-    aviso(`Seu teste grátis termina em ${dias} dia(s).`);
+  } else if (data.status === 'trial' && data.dias <= 5) {
+    aviso(`Seu teste grátis termina em ${data.dias} dia(s).`);
   }
 }
 

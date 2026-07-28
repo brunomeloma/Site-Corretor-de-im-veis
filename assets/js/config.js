@@ -11,7 +11,11 @@
 
 const PADRAO = {
   url: '',        // ex.: https://abcdefgh.supabase.co
-  anonKey: ''     // ex.: eyJhbGciOi... (chave "anon public")
+  anonKey: '',    // ex.: eyJhbGciOi... (chave "anon public")
+
+  // Chave PÚBLICA das notificações (VAPID). A chave privada fica só na
+  // Vercel, como variável de ambiente. Sem isto, o push fica desligado.
+  vapidPublica: ''
 };
 
 /* ---------------------------------------------------------------------
@@ -30,7 +34,8 @@ function salvo() {
 
 export const CONFIG = {
   url: PADRAO.url || salvo().url || '',
-  anonKey: PADRAO.anonKey || salvo().anonKey || ''
+  anonKey: PADRAO.anonKey || salvo().anonKey || '',
+  vapidPublica: PADRAO.vapidPublica || salvo().vapidPublica || ''
 };
 
 export const configurado = () => Boolean(CONFIG.url && CONFIG.anonKey);

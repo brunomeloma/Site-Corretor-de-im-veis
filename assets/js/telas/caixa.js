@@ -16,7 +16,7 @@ const PAGAMENTOS = [
 ];
 
 let caixa;
-let dados = { vendas: [], resumo: null, barbeiros: [], servicos: [], clientes: [], fechamento: null };
+let dados = { vendas: [], resumo: null, barbeiros: [], servicos: [], produtos: [], clientes: [], fechamento: null };
 
 export async function render(container) {
   caixa = container;
@@ -28,12 +28,13 @@ const podeFecharCaixa = () => estado.papel === 'dono' || estado.papel === 'recep
 
 async function carregar() {
   const bid = estado.barbearia.id;
-  const [resumo, vendas, barbeiros, servicos, clientes, fechamento] = await Promise.all([
+  const [resumo, vendas, barbeiros, servicos, produtos, clientes, fechamento] = await Promise.all([
     sb.rpc('vendas_de_hoje', { p_barbearia: bid }),
     sb.from('vendas').select('*, venda_itens(*), barbeiros(nome), clientes(nome)')
       .eq('barbearia_id', bid).order('data', { ascending: false }).limit(100),
     sb.from('barbeiros').select('id,nome,comissao_pct').eq('barbearia_id', bid).eq('ativo', true).order('nome'),
     sb.from('servicos').select('id,nome,preco').eq('barbearia_id', bid).eq('ativo', true).order('nome'),
+    sb.from('produtos').select('id,nome,preco,estoque').eq('barbearia_id', bid).eq('ativo', true).order('nome'),
     sb.from('clientes').select('id,nome').eq('barbearia_id', bid).order('nome').limit(1000),
     podeFecharCaixa()
       ? sb.from('caixas').select('*').eq('barbearia_id', bid).eq('dia', hojeIso()).maybeSingle()
@@ -48,6 +49,7 @@ async function carregar() {
     vendas: (vendas.data || []).filter((v) => v.data.slice(0, 10) >= hojeIso()),
     barbeiros: barbeiros.data,
     servicos: servicos.data,
+    produtos: produtos.data || [],
     clientes: clientes.data,
     fechamento: fechamento.data || null
   };
@@ -137,6 +139,7 @@ export function formVenda(pre = {}, aoSalvar) {
   const barbeiros = pre.barbeiros || dados.barbeiros;
   const servicos = pre.servicos || dados.servicos;
   const clientes = pre.clientes || dados.clientes;
+  const produtos = pre.produtos || dados.produtos || [];
 
   if (!barbeiros?.length) { toastErro('Cadastre um barbeiro antes de registrar vendas.'); return; }
 
@@ -178,7 +181,12 @@ export function formVenda(pre = {}, aoSalvar) {
         <div class="campo" style="margin:0">
           <label for="vServico" class="t-xs">Adicionar serviço</label>
           <select id="vServico">
-            ${servicos.map((s) => `<option value="${esc(s.id)}">${esc(s.nome)} — ${money(s.preco)}</option>`).join('')}
+            <optgroup label="Serviços">
+              ${servicos.map((s) => `<option value="${esc(s.id)}">${esc(s.nome)} — ${money(s.preco)}</option>`).join('')}
+            </optgroup>
+            ${produtos.length ? `<optgroup label="Produtos">
+              ${produtos.map((p) => `<option value="prod:${esc(p.id)}">${esc(p.nome)} — ${money(p.preco)} (${esc(String(p.estoque))} em estoque)</option>`).join('')}
+            </optgroup>` : ''}
             <option value="__avulso">Outro (valor livre)</option>
           </select>
         </div>
@@ -212,19 +220,39 @@ export function formVenda(pre = {}, aoSalvar) {
   const selServico = dlg.querySelector('#vServico');
   const inpPreco = dlg.querySelector('#vPreco');
 
+  const itemEscolhido = () => {
+    const v = selServico.value;
+    if (v.startsWith('prod:')) {
+      const p = produtos.find((x) => x.id === v.slice(5));
+      return p ? { produto: p, preco: p.preco, nome: p.nome } : null;
+    }
+    const s = servicos.find((x) => x.id === v);
+    return s ? { servico: s, preco: s.preco, nome: s.nome } : null;
+  };
+
   selServico.addEventListener('change', () => {
-    const s = servicos.find((x) => x.id === selServico.value);
-    inpPreco.value = s ? s.preco : 0;
+    const escolhido = itemEscolhido();
+    inpPreco.value = escolhido ? escolhido.preco : 0;
   });
 
   dlg.querySelector('#vAdd').addEventListener('click', () => {
     const valor = Number(inpPreco.value) || 0;
-    const s = servicos.find((x) => x.id === selServico.value);
-    if (!s && selServico.value !== '__avulso') return;
+    const escolhido = itemEscolhido();
+    if (!escolhido && selServico.value !== '__avulso') return;
     if (selServico.value === '__avulso' && valor <= 0) { toastErro('Informe o valor.'); return; }
+
+    if (escolhido?.produto) {
+      const jaNoCarrinho = itens.filter((i) => i.produto_id === escolhido.produto.id).length;
+      if (jaNoCarrinho >= escolhido.produto.estoque) {
+        toastErro(`Só tem ${escolhido.produto.estoque} de "${escolhido.produto.nome}" no estoque.`);
+        return;
+      }
+    }
+
     itens.push({
-      servico_id: s?.id || null,
-      descricao: s?.nome || 'Serviço avulso',
+      servico_id: escolhido?.servico?.id || null,
+      produto_id: escolhido?.produto?.id || null,
+      descricao: escolhido?.nome || 'Serviço avulso',
       quantidade: 1, preco_unit: valor,
       barbeiro_id: dlg.querySelector('#vBarbeiro').value
     });
@@ -295,6 +323,7 @@ async function salvarVenda(d, itens, pre, aoSalvar) {
     venda_id: nova.id,
     barbearia_id: estado.barbearia.id,
     servico_id: i.servico_id,
+    produto_id: i.produto_id || null,
     barbeiro_id: i.barbeiro_id,
     descricao: i.descricao,
     quantidade: i.quantidade,

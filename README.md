@@ -1,173 +1,204 @@
 # ✂ BARBER PRO — Sistema de Gestão para Barbearias
 
-Sistema web (SaaS) onde cada barbearia tem sua conta isolada: agenda por barbeiro,
-clientes, serviços, financeiro, comissões e lembretes.
+SaaS completo de barbearia: agenda, clientes, financeiro, comissões, produtos,
+fidelidade, link público de agendamento, notificações no celular e painel do
+administrador do site.
 
 **Como funciona por baixo:** site em HTML/CSS/JavaScript puro (sem framework),
-banco de dados e login no **Supabase**, publicação na **Vercel**.
-Quem protege os dados é a **RLS** do banco — mesmo que alguém mexa no navegador,
-não consegue ver dados de outra barbearia.
+banco e login no **Supabase**, funções de servidor e publicação na **Vercel**.
+Quem protege os dados é a **RLS** do banco — nem trocando ids no navegador uma
+barbearia enxerga a outra.
+
+---
+
+## O que o sistema faz
+
+**Agenda** — visão do dia por barbeiro, respeitando horário de trabalho e duração
+do serviço · encaixe/walk-in · confirmar, atendido, faltou, cancelar · WhatsApp com
+mensagem pronta · trava no banco contra dois clientes no mesmo horário.
+
+**Clientes** — cadastro com telefone, aniversário e preferências ("máquina 2 nas
+laterais") · busca · histórico de cortes · cartão fidelidade.
+
+**Caixa** — venda com vários itens (serviços, produtos, valor avulso), desconto e
+forma de pagamento · taxa da maquininha descontada sozinha · comissão automática ·
+fechamento de caixa (bater a gaveta) · cobrança em um toque a partir da agenda.
+
+**Relatórios (dono)** — faturamento, taxas, comissões, despesas e a sobra no fim ·
+ranking de barbeiros · serviços mais vendidos · horários de pico.
+
+**Produtos** — revenda com estoque que baixa na venda, aviso de estoque baixo e
+comissão própria por produto.
+
+**Equipe** — o dono cria os logins de barbeiro e recepção, troca senha e remove
+acesso, tudo por uma função de servidor.
+
+**Link público** — `seusite.com/agendar/sua-barbearia`: o cliente marca sozinho,
+só nos horários realmente livres.
+
+**Notificações** — aviso no celular/PC X minutos antes do atendimento, mesmo com
+o app fechado.
+
+**Painel do administrador do site** — todas as barbearias, inadimplentes, receita
+por mês, registrar pagamento, suspender e apagar conta.
+
+**Papéis:** dono vê tudo · barbeiro vê só a própria agenda e os próprios ganhos ·
+recepção agenda e vende, mas só enxerga as vendas de hoje.
 
 ---
 
 ## Estrutura das pastas
 
 ```
-index.html              → tela de entrar / criar conta
-app.html                → o sistema (agenda, clientes, etc.)
-nova-senha.html         → tela de redefinir senha
-manifest.webmanifest    → deixa instalar como app no celular (PWA)
-vercel.json             → configuração da publicação
+index.html                 entrar / criar conta
+app.html                   o sistema
+agendar.html               página pública de agendamento do cliente
+admin.html                 painel do administrador do site
+nova-senha.html            redefinir senha
+sw.js                      service worker (notificações push)
+manifest.webmanifest       instalar como app no celular
+vercel.json                publicação, rota /agendar/:slug e cron do push
+package.json               dependências SÓ das funções de servidor
+
+api/                       funções de servidor (Vercel)
+  _lib/auth.js             valida token, descobre papel e barbearia
+  equipe.js                criar / trocar senha / remover login da equipe
+  push-lembretes.js        cron de 1 em 1 minuto que dispara os avisos
+  admin-conta.js           apagar conta (só admin, com senha e confirmação)
+
 sql/
-  001_base.sql          → tabelas e segurança (agenda, clientes, equipe)
-  002_trava_barbearia_fantasma.sql → impede funcionário de virar dono
-  003_financeiro.sql    → vendas, comissões, despesas, caixa e relatórios
-  testes/               → testes automáticos de segurança (rodam num Postgres limpo)
+  TUDO.sql                 ← RODE ESTE (junta as migrações 001 a 007)
+  001..007_*.sql           as migrações separadas, em ordem
+  testes/                  testes automáticos de segurança
+
 assets/
-  css/style.css         → todo o visual
-  img/icone.svg         → ícone do app
-  vendor/supabase.js    → biblioteca do Supabase (guardada aqui, não depende de CDN)
+  css/style.css            todo o visual (tokens de design, tema claro/escuro)
+  vendor/supabase.js       biblioteca do Supabase (sem CDN)
   js/
-    config.js           → onde ficam a URL e a chave do Supabase
-    supabase.js         → conexão com o banco + tradução dos erros
-    ui.js               → ajudantes (escapar texto, modais, datas, dinheiro)
-    entrar.js           → lógica da tela de entrada
-    app.js              → o "cérebro": sessão, papel do usuário, menu, telas
-    telas/
-      agenda.js   clientes.js   servicos.js   barbeiros.js   ajustes.js
-      caixa.js    relatorios.js  ganhos.js
+    config.js              chaves do Supabase e do push
+    supabase.js  ui.js  push.js  app.js  entrar.js  agendar.js  admin.js
+    telas/  agenda · clientes · caixa · relatorios · ganhos ·
+            servicos · produtos · barbeiros · equipe · ajustes
 ```
 
 ---
 
-## O que já funciona (Etapa 1)
+# GUIA DE INSTALAÇÃO (o que só você pode fazer)
 
-- Criar conta, entrar, sair e recuperar senha
-- Criar a barbearia (14 dias de teste grátis) com nome, telefone e **cor da marca**
-- **Agenda do dia**, uma coluna por barbeiro, respeitando o horário de trabalho
-- Agendar clicando num horário livre; a duração do serviço reserva o tempo certo
-- **Encaixe** (cliente sem cadastro), editar, confirmar, marcar atendido/faltou, cancelar
-- Botão de **WhatsApp** com mensagem de confirmação pronta
-- Clientes: cadastro, busca, aniversário, observações e histórico de cortes
-- Serviços: nome, duração e preço · Barbeiros: comissão, cor e horário de trabalho
-- Papéis: **dono** vê tudo; **barbeiro** vê só a própria agenda; **recepção** agenda sem ver ajustes de negócio
-- Tema claro/escuro, celular, instalável como app, e **backup** em arquivo
+São 6 passos. Reserve uns 30 minutos na primeira vez.
 
-## O que já funciona (Etapa 2 — Financeiro)
+## Passo 1 — Criar o banco (5 min)
 
-- **Caixa**: registrar venda com vários itens, desconto e forma de pagamento
-  (dinheiro, Pix, débito, crédito), com a **taxa da maquininha descontada sozinha**
-- Ao marcar um atendimento como "atendido", o sistema já oferece **cobrar**, com
-  cliente, barbeiro, serviço e preço preenchidos
-- **"Vendas de hoje"** para a recepção (zera todo dia) x **faturamento do mês** só para o dono
-- **Comissão automática** por barbeiro (o % fica congelado na hora da venda)
-- **Meus ganhos**: o barbeiro vê o que produziu e quanto tem a receber — só dele
-- **Fechamento de caixa**: quanto de dinheiro deveria ter na gaveta x quanto deu
-- **Despesas** e **relatórios**: faturamento, sobra no fim, ranking de barbeiros,
-  serviços mais vendidos e horários de pico
-- Taxas das maquininhas configuráveis pelo dono
-
-## O que vem nas próximas etapas
-
-Logins da equipe (função serverless) · notificações push · link público de
-auto-agendamento · produtos/estoque · fidelidade · painel do admin do site ·
-cobrança da assinatura.
-
----
-
-## Configuração (o que VOCÊ precisa fazer)
-
-### 1. Criar as tabelas no Supabase
-
-1. Entre no [supabase.com](https://supabase.com) e abra seu projeto.
+1. Entre em [supabase.com](https://supabase.com) e abra seu projeto.
 2. Menu da esquerda → **SQL Editor** → **New query**.
-3. Abra o arquivo `sql/001_base.sql` deste repositório, copie **tudo** e cole lá.
-4. Clique em **Run**. Deve aparecer *Success*.
-5. Repita os passos 2 a 4 com `sql/002_trava_barbearia_fantasma.sql`
-   (impede que um login de funcionário vire dono de uma barbearia vazia).
-6. Repita de novo com `sql/003_financeiro.sql`
-   (vendas, comissões, despesas, caixa e relatórios).
+3. Abra o arquivo **`sql/TUDO.sql`** deste repositório, copie **tudo** e cole lá.
+4. Clique em **RUN** e espere aparecer *Success*.
 
-> Esse script **não apaga nada**. Pode rodar de novo sem medo.
+> É seguro: não apaga nenhum dado e pode ser rodado de novo quantas vezes quiser.
+> Aparecem várias mensagens amarelas de "does not exist, skipping" — é normal.
 
-### 2. Pegar as chaves do projeto
+## Passo 2 — Você vira o administrador do site (1 min)
 
-No Supabase: **Project Settings → API**. Você precisa de dois valores:
+Primeiro **crie sua conta** no site (a mesma que você vai usar). Depois, no
+**SQL Editor**, rode isto trocando o e-mail:
 
-| Nome lá no Supabase | Exemplo |
-|---|---|
-| Project URL | `https://abcdefgh.supabase.co` |
-| anon public (API key) | `eyJhbGciOiJIUzI1...` |
+```sql
+insert into public.admin_users (user_id)
+select id from auth.users where email = 'seu@email.com'
+on conflict do nothing;
+```
 
-Esses dois valores são **públicos** — podem ficar no código sem risco.
+A partir daí aparece o item **🛡️ Painel do site** no menu, e `/admin.html` abre.
 
-### 3. Colocar as chaves no sistema
+## Passo 3 — Colocar as chaves no código (3 min)
 
-**Modelo SaaS:** existe UM único projeto Supabase — o seu. Todas as barbearias
-usam a mesma URL e a mesma chave anon. O barbeiro cliente nunca vê tela de chave
-nenhuma e não tem Supabase próprio.
-
-Edite `assets/js/config.js` e preencha **uma vez**:
+No Supabase: **Project Settings → API**. Copie os dois valores e cole em
+`assets/js/config.js`:
 
 ```js
 const PADRAO = {
-  url: 'https://abcdefgh.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1...'
+  url: 'https://xxxxxxxx.supabase.co',   // Project URL
+  anonKey: 'eyJhbGciOiJIUzI1...',        // chave anon public
+  vapidPublica: ''                       // preenchemos no passo 5
 };
 ```
 
-A telinha de "colar as chaves" **só aparece em `localhost`** — é ferramenta de
-desenvolvimento. Publicado sem chaves, o cliente vê "sistema temporariamente
-indisponível", nunca um formulário pedindo chave.
+São valores **públicos** — podem ficar no código. Existe **um único projeto
+Supabase** (o seu) para todas as barbearias; o cliente nunca vê tela de chave.
 
-### 4. Ajustar o login por e-mail
+## Passo 4 — Login por e-mail (3 min)
 
-No Supabase → **Authentication → Providers → Email**:
+Supabase → **Authentication → Providers → Email**: deixe ligado.
 
-- Deixe **Enable Email provider** ligado.
-- Para testar rápido, **desligue "Confirm email"** (aí a conta já entra direto).
-- **Antes de abrir para clientes de verdade, religue "Confirm email"** e configure
-  um SMTP próprio (Settings → Authentication → SMTP). O e-mail padrão do Supabase
-  tem limite baixo e cai em spam.
+- **Para testar agora:** desligue "Confirm email".
+- **Antes do primeiro cliente pagante:** ligue "Confirm email" e configure SMTP
+  próprio em **Project Settings → Authentication → SMTP**. Sugestão (grátis até
+  3.000 e-mails/mês): crie conta no [Resend](https://resend.com), gere uma API Key
+  e preencha: host `smtp.resend.com`, porta `465`, usuário `resend`, senha = a API
+  key, remetente `nao-responda@seudominio.com`.
 
-Em **Authentication → URL Configuration**, coloque em *Site URL* o endereço do seu
-site (ex.: `https://barberpro.vercel.app`) — é pra onde o link de "nova senha" volta.
+Em **Authentication → URL Configuration**, coloque em *Site URL* o endereço do
+site publicado (ex.: `https://barberpro.vercel.app`).
 
-### 5. Publicar na Vercel
+## Passo 5 — Chaves das notificações (VAPID) (3 min)
 
-1. Em [vercel.com](https://vercel.com) → **Add New → Project** → escolha este repositório.
-2. **Framework Preset:** `Other`. Não precisa comando de build.
-3. **Deploy**. Pronto — o site sobe em `https://seu-projeto.vercel.app`.
+No seu computador, com Node instalado, rode:
 
-### 6. Testar na sua máquina (opcional)
+```bash
+npx web-push generate-vapid-keys
+```
 
-Dentro da pasta do projeto, rode no terminal:
+Ele imprime duas chaves:
+
+- **Public Key** → cole em `assets/js/config.js`, no campo `vapidPublica`.
+- **Private Key** → **nunca** vai no código; ela entra na Vercel no passo 6.
+
+## Passo 6 — Publicar na Vercel (10 min)
+
+1. [vercel.com](https://vercel.com) → **Add New → Project** → escolha este repositório.
+2. **Framework Preset:** `Other`. Sem comando de build.
+3. Antes de clicar em Deploy, abra **Environment Variables** e cadastre:
+
+| Nome | Onde achar o valor |
+|---|---|
+| `SUPABASE_URL` | Supabase → Settings → API → Project URL |
+| `SUPABASE_ANON_KEY` | Supabase → Settings → API → chave **anon public** |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → chave **service_role** ⚠️ segredo |
+| `VAPID_PUBLIC_KEY` | a Public Key do passo 5 |
+| `VAPID_PRIVATE_KEY` | a Private Key do passo 5 ⚠️ segredo |
+| `VAPID_SUBJECT` | `mailto:seu@email.com` |
+| `CRON_SECRET` | invente uma senha longa (ex.: 30 letras aleatórias) |
+
+4. **Deploy**. O cron das notificações liga sozinho (está no `vercel.json`).
+
+> ⚠️ A `service_role` dá poder total no banco. Ela só existe na Vercel, nunca no
+> código do site. Se vazar, gere outra no Supabase na hora.
+
+---
+
+## Depois de instalar: o que fazer dentro do sistema
+
+1. Crie sua conta e a barbearia (14 dias de teste grátis).
+2. **Barbeiros** → cadastre quem atende, com dias, horários e comissão.
+3. **Serviços** → ajuste preços e durações (4 já vêm prontos).
+4. **Produtos** → o que você revende, se vender.
+5. **Relatórios → Taxas das maquininhas** → coloque as suas taxas reais.
+6. **Equipe** → crie os logins do time (a senha aparece **uma vez**; anote e entregue).
+7. **Ajustes** → ligue as notificações, copie o link de auto-agendamento e ligue a
+   fidelidade se quiser.
+
+---
+
+## Testar antes de abrir para clientes
+
+O roteiro completo está em **[TESTES.md](TESTES.md)** — inclusive o teste de
+isolamento entre duas contas, que é o mais importante de todos.
+
+Para rodar na sua máquina:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-E abra `http://localhost:8080`.
-(Não funciona abrindo o arquivo com duplo clique — precisa de um servidor.)
-
----
-
-## Testes obrigatórios
-
-O roteiro completo (isolamento entre contas, trava de horário e barbearia
-fantasma) está em **[TESTES.md](TESTES.md)**. Faça antes de publicar.
-
-## Roteiro de teste da Etapa 1
-
-1. Crie sua conta em `/` → **Criar conta**.
-2. Preencha o nome da barbearia e escolha uma cor — repare que o sistema muda de cor.
-3. Menu **Barbeiros** → cadastre 2 barbeiros, com dias e horários diferentes.
-4. Menu **Serviços** → confira os 4 serviços criados automaticamente; mude um preço.
-5. Menu **Clientes** → cadastre um cliente com telefone e observação.
-6. Menu **Agenda** → clique num horário livre e agende. Veja o bloco ocupar a duração certa.
-7. **Tente agendar outro cliente no mesmo horário e barbeiro**: o sistema recusa
-   ("Esse barbeiro já tem um atendimento nesse horário") — a trava é no banco.
-8. Clique no agendamento → **WhatsApp** (mensagem pronta), **Atendido**, **Cancelar**.
-9. **Ajustes** → troque o tema, baixe o backup.
-10. **Isolamento:** crie uma segunda conta com outro e-mail e outra barbearia.
-    Ela não pode enxergar nada da primeira.
+E abra `http://localhost:8080` (não funciona com duplo clique no arquivo).
+Em `localhost` aparece uma telinha para colar as chaves sem editar o código.

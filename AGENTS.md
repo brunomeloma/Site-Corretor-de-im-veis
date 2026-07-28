@@ -36,3 +36,9 @@ Sistema SaaS de gestão para barbearias. **Não é um projeto Next.js/React.**
 - **Financeiro por papel** (migração 003): recepção só enxerga o dia de hoje,
   barbeiro só o que é dele, relatórios só do dono — tudo checado no banco
   (policies + funções que validam `meu_papel()`), nunca só na tela.
+- **Serverless**: `/api/_lib/auth.js` valida o token e descobre papel/barbearia no
+  banco. Nenhuma função confia em id vindo do corpo do pedido.
+- **Link público**: o visitante (`anon`) só executa `agenda_publica`,
+  `horarios_livres` e `agendar_publico`. Nenhuma tabela liberada para `anon`.
+- **Um SQL só**: depois de mexer nas migrações, gere de novo o `sql/TUDO.sql`
+  (é a concatenação de 001..007 na ordem).

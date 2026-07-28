@@ -1,0 +1,11 @@
+{
+  "name": "barber-pro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "BARBER PRO — sistema de gestão para barbearias. O site é HTML/CSS/JS puro; estas dependências são só das funções de servidor em /api.",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.58.0",
+    "web-push": "^3.6.7"
+  }
+}

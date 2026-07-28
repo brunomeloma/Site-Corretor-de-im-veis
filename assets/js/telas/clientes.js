@@ -134,6 +134,7 @@ function form(c) {
 }
 
 async function historico(c) {
+  const { data: fid } = await sb.rpc('fidelidade_cliente', { p_cliente: c.id });
   const { data, error } = await sb.from('agendamentos')
     .select('inicio,status,preco,servicos(nome),barbeiros(nome)')
     .eq('barbearia_id', estado.barbearia.id).eq('cliente_id', c.id)
@@ -141,10 +142,17 @@ async function historico(c) {
   if (error) return toastErro(traduzErro(error));
 
   const total = data.filter((a) => a.status === 'atendido').length;
-  modal({
+  const dlg = modal({
     titulo: `Histórico — ${c.nome}`,
     corpo: `
       <p class="muted" style="margin-top:0">${total} atendimento(s) concluído(s)</p>
+      ${fid?.ativa ? `<div class="card ${fid.premiado ? 'fidelidade-premio' : ''}" style="margin-bottom:1rem">
+        <b>🎁 Cartão fidelidade</b>
+        <p style="margin:.3rem 0 0">${fid.premiado
+          ? 'Este cliente <b>ganhou um corte grátis!</b> Toque em resgatar quando usar.'
+          : `${esc(String(fid.quantidade))} de ${esc(String(fid.meta))} cortes — faltam <b>${esc(String(fid.faltam))}</b>.`}</p>
+        ${fid.premiado ? '<button class="btn btn-sm btn-primary" style="margin-top:.6rem" data-resgatar>Resgatar corte grátis</button>' : ''}
+      </div>` : ''}
       ${c.observacoes ? `<div class="card" style="margin-bottom:1rem"><b>Preferências:</b><br>${esc(c.observacoes)}</div>` : ''}
       ${data.length === 0 ? estadoVazio({ icone: '✂️', titulo: 'Ainda sem atendimentos', texto: 'O histórico aparece aqui depois do primeiro corte.' }) : `
         <div class="tabela-wrap"><table>

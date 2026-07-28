@@ -1,6 +1,9 @@
 -- Simula o ambiente do Supabase (schema auth + auth.uid() + role authenticated)
 create schema if not exists auth;
-create table if not exists auth.users (id uuid primary key, email text);
+create table if not exists auth.users (
+  id uuid primary key, email text,
+  raw_user_meta_data jsonb default '{}'::jsonb,
+  last_sign_in_at timestamptz, created_at timestamptz default now());
 create or replace function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;
 $$;
@@ -8,8 +11,12 @@ do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then
     create role authenticated login;
   end if;
+  -- 'anon' é o visitante sem login (existe de fábrica no Supabase)
+  if not exists (select 1 from pg_roles where rolname = 'anon') then
+    create role anon login;
+  end if;
 end $$;
-grant usage on schema public, auth to authenticated;
+grant usage on schema public, auth to authenticated, anon;
 
 \i sql/001_base.sql
 \i sql/002_trava_barbearia_fantasma.sql

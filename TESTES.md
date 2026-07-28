@@ -188,3 +188,48 @@ Para rodar por conta própria, num Postgres local:
 ```bash
 psql -f sql/testes/teste_rls.sql -f sql/testes/teste_financeiro.sql
 ```
+
+---
+
+## Teste 5 — Link público, produtos, fidelidade e painel admin (automático)
+
+`sql/testes/teste_publico_admin.sql`. Última execução — **13 de 13 passaram**:
+
+| # | O que testa | Resultado |
+|---|---|---|
+| 1 | Endereço amigável (slug) criado sozinho | `barbearia-a`, `barbearia-b` |
+| 2 | Visitante sem login lê alguma tabela | não tem nem permissão |
+| 3 | Visitante vê a vitrine pela função liberada | nome + 4 serviços + 1 barbeiro |
+| 3b | Link que não existe | devolve vazio |
+| 4 | Horários livres respeitam expediente e agenda | só 09:00–11:30 |
+| 5 | Cliente marca sozinho | agendado |
+| 5b | Mesmo horário de novo | recusado |
+| 5c | Telefone inválido / data no passado | recusados |
+| 6 | Auto-agendamento desligado | link some |
+| 7 | Venda de produto baixa e estorno devolve estoque | 10 → 7 → 10 |
+| 7b | Comissão própria do produto (20% de 120) | R$ 24 |
+| 8 | Cartão fidelidade conta e zera no resgate | 3/3 premiado → 0/3 |
+| 9 | Dono comum abre o painel do site | bloqueado |
+| 10 | Admin de verdade vê resumo e contas | ok |
+| 11 | Registrar pagamento reativa e soma 30 dias | vencida → +30 dias, ativa |
+| 12 | Alguém vira admin pelo navegador | bloqueado |
+| 13 | Colega vê a inscrição de push de outro | 0 |
+
+Rodando tudo de uma vez, num Postgres local:
+
+```bash
+psql -f sql/testes/teste_rls.sql \
+     -f sql/testes/teste_financeiro.sql \
+     -f sql/testes/teste_publico_admin.sql
+```
+
+## Teste 6 — Notificações push (manual, precisa estar publicado)
+
+1. No celular, abra o site publicado, entre e vá em **Ajustes → Ligar neste aparelho**.
+   Aceite a permissão do navegador.
+   *(No iPhone é obrigatório antes: Compartilhar → "Adicionar à Tela de Início",
+   e abrir o app por lá.)*
+2. Crie um agendamento para daqui a ~25 minutos (se o aviso está em 30 min).
+3. Feche o app e espere. O aviso deve chegar em até 1 minuto do horário calculado.
+4. Se não chegar, veja na Vercel → **Deployments → Functions → /api/push-lembretes**
+   os logs do cron: ele responde `{ok:true, enviados:N}`.
