@@ -28,6 +28,7 @@ export default function ClientesPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza com o Supabase ao montar
     carregar();
   }, []);
 

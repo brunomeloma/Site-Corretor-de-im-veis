@@ -1,7 +1,7 @@
 'use client';
 
 import { Client, FilterStatus, ClientStatus } from '@/lib/types';
-import { formatDate, generateBillingWhatsAppLink, getStatusLabel, getStatusColor, isOverdue, needsBilling } from '@/lib/utils';
+import { formatDate, generateBillingWhatsAppLink, getStatusColor, isOverdue, needsBilling } from '@/lib/utils';
 import { MessageCircle, Trash2, AlertCircle, ChevronDown } from 'lucide-react';
 
 interface ClientTableProps {
@@ -84,7 +84,7 @@ export default function ClientTable({ clients, filter, onFilterChange, onChangeS
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {filtered.map((client, idx) => {
+            {filtered.map((client) => {
               const colors = getStatusColor(client.status);
               return (
                 <tr key={client.id} className={`hover:bg-slate-50 transition-colors ${colors.row}`}>

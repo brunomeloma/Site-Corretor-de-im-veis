@@ -17,6 +17,9 @@ export default function HomePage() {
   const [tab, setTab] = useState<ActiveTab>('dashboard');
 
   useEffect(() => {
+    // Sincroniza com o localStorage (sistema externo) só após montar no cliente,
+    // evitando divergência entre o HTML gerado no build e o estado real do navegador.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setClients(getClients());
     setProspects(getProspects());
   }, []);

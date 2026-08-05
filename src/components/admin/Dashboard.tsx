@@ -1,7 +1,7 @@
 'use client';
 
 import { Client } from '@/lib/types';
-import { DollarSign, AlertTriangle, Users, TrendingUp, Send, XCircle } from 'lucide-react';
+import { DollarSign, AlertTriangle, Users, Send, XCircle } from 'lucide-react';
 
 interface DashboardProps {
   clients: Client[];
@@ -12,7 +12,6 @@ export default function Dashboard({ clients }: DashboardProps) {
   const sentCount = clients.filter((c) => c.status === 'enviado').length;
   const pendingCount = clients.filter((c) => c.status === 'pendente').length;
   const cancelCount = clients.filter((c) => c.status === 'cancelando' || c.status === 'processo_cancel').length;
-  const activeCount = paidCount + sentCount + pendingCount;
   const compliance = clients.length > 0 ? Math.round((paidCount / clients.length) * 100) : 0;
 
   return (
