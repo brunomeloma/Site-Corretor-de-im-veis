@@ -47,7 +47,7 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm"
+        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm"
       >
         <UserPlus className="h-4 w-4" />
         Novo Cliente
@@ -171,7 +171,7 @@ export default function AddClientForm({ onAdd }: AddClientFormProps) {
 
         <button
           type="submit"
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors shadow-sm"
+          className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-sm"
         >
           <UserPlus className="h-4 w-4" />
           Cadastrar Cliente
