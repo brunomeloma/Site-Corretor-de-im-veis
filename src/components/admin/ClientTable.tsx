@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Client, FilterStatus, ClientStatus } from '@/lib/types';
-import { formatDate, generateBillingWhatsAppLink, getStatusLabel, getStatusColor, isOverdue, needsBilling } from '@/lib/utils';
+import { formatDate, generateBillingWhatsAppLink, getStatusColor, isOverdue, needsBilling } from '@/lib/utils';
 import { MessageCircle, Trash2, AlertCircle, ChevronDown, Pencil } from 'lucide-react';
 import EditClientModal from './EditClientModal';
 
